@@ -6,5 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(Curses REQUIRED)
 find_package(CURL REQUIRED)
 
-add_executable(leetcode_tui main.cpp)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined,leak")
+
+add_executable(leetcode_tui src/main.cpp
+        src/mainwindow.hpp
+        src/mainwindow.cpp
+        src/menuwindow.cpp
+        src/menuwindow.hpp
+        src/questionwindow.cpp
+        src/questionwindow.hpp
+        src/request.cpp
+        src/request.hpp)
 target_link_libraries(leetcode_tui ncurses curl)
