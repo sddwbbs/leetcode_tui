@@ -15,6 +15,11 @@ add_executable(leetcode_tui src/main.cpp
         src/menuwindow.hpp
         src/questionwindow.cpp
         src/questionwindow.hpp
-        src/request.cpp
-        src/request.hpp)
+        src/dailyrequest.cpp
+        src/request.hpp
+        src/helpers/dailyquestion.cpp
+        src/helpers/dailyquestion.hpp
+        src/helpers/dailyrequest.hpp
+        src/textwindow.cpp
+        src/textwindow.hpp)
 target_link_libraries(leetcode_tui ncurses curl)

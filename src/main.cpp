@@ -1,25 +1,8 @@
-#include <iostream>
 #include <ncurses.h>
 #include <cstdlib>
-#include <curl/curl.h>
-#include <sstream>
-#include <nlohmann/json.hpp>
-#include <regex>
 #include "mainwindow.hpp"
 #include "menuwindow.hpp"
-
-using json = nlohmann::json;
-
-size_t writeCallback(void* contents, size_t size, size_t nmemb, std::stringstream* ss) {
-    size_t totalSize = size * nmemb;
-    ss->write(static_cast<char*>(contents), totalSize);
-    return totalSize;
-}
-
-std::string removeHtmlTags(const std::string &htmlStr) {
-    std::regex regex("<[^>]*>");
-    return std::regex_replace(htmlStr, regex, "");
-}
+#include "helpers/dailyquestion.hpp"
 
 int main(int argc, char **argv)
 {
@@ -70,39 +53,8 @@ int main(int argc, char **argv)
                 }
 
                 if (mainMenuWindow.curItem == 1) {
-                    std::string htmlTask;
-                    CURL *curl;
-                    CURLcode res;
-                    std::stringstream responseStream;
-                    json jsonResponse;
-
-                    curl_global_init(CURL_GLOBAL_DEFAULT);
-                    curl = curl_easy_init();
-                    if (curl) {
-                        curl_easy_setopt(curl, CURLOPT_URL, "https://alfa-leetcode-api.onrender.com/daily");
-                        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-                        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseStream);
-
-                        res = curl_easy_perform(curl);
-                        if (res != CURLE_OK) {
-                            std::cerr << "Failed to perform HTTP request: " << curl_easy_strerror(res) << std::endl;
-                        } else {
-                            // Parse the response as JSON
-                            try {
-                                jsonResponse = json::parse(responseStream.str());
-                            } catch (const std::exception& e) {
-                                std::cerr << "Failed to parse JSON response: " << e.what() << std::endl;
-                                return 1;
-                            }
-                        }
-                        curl_easy_cleanup(curl);
-                    } else {
-                        std::cerr << "Failed to initialize libcurl." << std::endl;
-                    }
-
-                    curl_global_cleanup();
-                    std::string task = removeHtmlTags(jsonResponse["question"]);
-                    mvwprintw(mainWin, 5, 4, task.c_str());
+                    DailyQuestion dailyQuestion;
+                    mvwprintw(mainWin, 5, 4, "%s", dailyQuestion.getDailyQuestion().c_str());
                     wrefresh(mainWin);
                 }
                 break;
@@ -123,4 +75,5 @@ int main(int argc, char **argv)
     }
 
     endwin();
+    return 0;
 }
