@@ -9,11 +9,11 @@ using std::string;
 
 class MenuWindow {
     WINDOW* curWin = nullptr;
+    const vector<string> menuItems;
+public:
     MenuWindow(const MenuWindow&) = delete;
     MenuWindow() = delete;
     MenuWindow& operator=(const MenuWindow&) = delete;
-    const vector<string> menuItems;
-public:
     explicit MenuWindow(const vector<string> &menuItems);
     int curItem = 0;
     int menuSize = 0;

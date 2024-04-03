@@ -1,8 +1,10 @@
-#include <ncurses.h>
-#include <cstdlib>
 #include "mainwindow.hpp"
 #include "menuwindow.hpp"
-#include "helpers/dailyquestion.hpp"
+#include "textwindow.hpp"
+#include "helpers/dailyquestionrequest.hpp"
+
+#include <ncurses.h>
+#include <cstdlib>
 
 int main(int argc, char **argv)
 {
@@ -53,9 +55,21 @@ int main(int argc, char **argv)
                 }
 
                 if (mainMenuWindow.curItem == 1) {
-                    DailyQuestion dailyQuestion;
-                    mvwprintw(mainWin, 5, 4, "%s", dailyQuestion.getDailyQuestion().c_str());
+                    TextWindow questionTextWindow(DailyQuestionRequest::getQuestion());
+                    WINDOW* questionTextWin = questionTextWindow.drawWindow(30, 100, row / 2 - 15, col / 2 - 50);
+                    wrefresh(questionTextWin);
+
+                    int ch2;
+                    while ((ch2 = getch()) != 27) { // Continue loop until ESC key is pressed
+                        questionTextWindow.handleKeyEvent(ch2);
+                    }
+                    questionTextWindow.closeWindow();
+
+                    MainWindow::refreshWindow(row, col, 0, 0);
+                    mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
+
                     wrefresh(mainWin);
+                    wrefresh(mainMenuWin);
                 }
                 break;
         }
@@ -67,7 +81,7 @@ int main(int argc, char **argv)
         if (new_row != row || new_col != col || ch == 'c') {
             row = new_row, col = new_col;
             MainWindow::refreshWindow(row, col, 0, 0);
-            mainMenuWindow.refreshWindow(10, 30, row / 2 - 10, col / 2 - 30);
+            mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
 
             wrefresh(mainWin);
             wrefresh(mainMenuWin);
@@ -75,5 +89,4 @@ int main(int argc, char **argv)
     }
 
     endwin();
-    return 0;
 }

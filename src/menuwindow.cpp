@@ -31,6 +31,7 @@ WINDOW* MenuWindow::drawWindow(int row, int col, int x, int y) {
 
     return curWin;
 }
+
 void MenuWindow::refreshWindow(int row, int col, int x, int y) {
     wresize(curWin, row, col);
     mvwin(curWin, x, y);

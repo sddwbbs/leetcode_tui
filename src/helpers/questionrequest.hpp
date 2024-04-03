@@ -37,9 +37,9 @@ std::string removeHtmlTags(const std::string& htmlStr) {
     return std::regex_replace(replacedStr, regex, "");
 }
 
-class DailyRequest {
+class QuestionRequest {
 public:
-    static string getResponse() {
+    static string getTitle() {
         CURL *curl;
         CURLcode res;
         string readBuffer;
@@ -74,8 +74,12 @@ public:
         }
 
         curl_global_cleanup();
-        string task = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["link"];
+        string titleSlug = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["titleSlug"];
 
-        return task;
+        return titleSlug;
+    }
+
+    static string getContent() {
+
     }
 };
