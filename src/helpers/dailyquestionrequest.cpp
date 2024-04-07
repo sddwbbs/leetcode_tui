@@ -2,8 +2,9 @@
 
 string DailyQuestionRequest::titleSlug;
 string DailyQuestionRequest::title;
+string DailyQuestionRequest::htmlContent;
 string DailyQuestionRequest::content;
-int DailyQuestionRequest::curDay = 0;
+time_t DailyQuestionRequest::refreshTime;
 
 size_t DailyQuestionRequest::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
@@ -86,39 +87,64 @@ bool DailyQuestionRequest::getContent() {
     }
 
     curl_global_cleanup();
-    content = jsonResponse["data"]["question"]["content"];
+    htmlContent = jsonResponse["data"]["question"]["content"];
     return true;
 }
 
-void DailyQuestionRequest::removeHtmlTags() {
-    // Replace HTML entities with ASCII characters
-    size_t pos = 0;
-    while ((pos = content.find("\n")) != std::string::npos) {
-        content.replace(pos, 2, " ");
-    }
-    while ((pos = content.find("&quot;")) != std::string::npos) {
-        content.replace(pos, 6, "\""); // Replace "&quot;" with double quote
-    }
-    while ((pos = content.find("&lt;")) != std::string::npos) {
-        content.replace(pos, 4, "<"); // Replace "&lt;" with less-than sign
-    }
-    while ((pos = content.find("&nbsp;")) != std::string::npos) {
-        content.replace(pos, 6, " ");
-    }
+bool DailyQuestionRequest::saveToFile() {
+    std::ofstream myFileOutput;
+    myFileOutput.open("content.html");
+    myFileOutput << refreshTime << "<p>" << title << htmlContent;
+    myFileOutput.close();
 
-    std::regex regex("<[^>]*>");
-    content = std::regex_replace(content, regex, "");
+    system("elinks -dump content.html > content.txt");
+    std::ifstream myFileInput ("content.txt");
+    string date;
+    if (myFileInput.is_open()) {
+        std::getline(myFileInput, date);
+        std::stringstream buffer;
+        std::getline(myFileInput >> std::ws, title);
+        buffer << title << myFileInput.rdbuf();
+        content = buffer.str();
+    } else return false;
+    myFileInput.close();
+    return true;
 }
 
 string DailyQuestionRequest::getQuestion() {
-    std::time_t currentTime = std::time(nullptr);
-    std::tm* localTime = std::localtime(&currentTime);
-    int day = localTime->tm_mday;
-    if (day == curDay && !titleSlug.empty()) return content;
-    curDay = day;
-    while (!getTitleSlug()) getTitleSlug();
-    while (!getContent()) getContent();
-    removeHtmlTags();
-    content = title + "\n" + content;
+    std::time_t curTime = std::time(nullptr);
+
+    refreshTime = curTime;
+    std::tm* refreshDate = std::localtime(&refreshTime);
+    refreshDate->tm_hour = 7;
+    refreshDate->tm_min = 0;
+    refreshTime = std::mktime(refreshDate);
+
+    string firstLine;
+    bool fileOpened = false;
+    time_t fileRefreshTime = refreshTime;
+    std::ifstream myFileInput("content.txt");
+    if (myFileInput.is_open()) {
+        fileOpened = true;
+        std::getline(myFileInput >> std::ws, firstLine);
+        std::stringstream buffer;
+        std::getline(myFileInput >> std::ws, title);
+        buffer << title << myFileInput.rdbuf();
+        content = buffer.str();
+        fileRefreshTime = std::stoi(firstLine);
+        if (fileRefreshTime > refreshTime) refreshTime = fileRefreshTime;
+        myFileInput.close();
+    }
+
+    if (!fileOpened || curTime >= refreshTime || curTime >= fileRefreshTime) {
+        refreshDate->tm_mday += 1;
+        refreshTime = std::mktime(refreshDate);
+        while (!getTitleSlug()) getTitleSlug();
+        while (!getContent()) getContent();
+        if (saveToFile()) return content;
+        else return "Error while saving file";
+    }
+
     return content;
 }
+

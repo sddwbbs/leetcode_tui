@@ -56,14 +56,13 @@ int main(int argc, char **argv)
 
                 if (mainMenuWindow.curItem == 1) {
                     TextWindow questionTextWindow(DailyQuestionRequest::getQuestion());
-                    WINDOW* questionTextWin = questionTextWindow.drawWindow(30, 100, row / 2 - 15, col / 2 - 50);
+                    int k = questionTextWindow.contentLength;
+                    WINDOW* questionTextWin = questionTextWindow.drawWindow(30, 80, row / 2 - 15, col / 2 - 40);
                     wrefresh(questionTextWin);
 
                     int ch2;
                     while ((ch2 = getch()) != 27) { // Continue loop until ESC key is pressed
-                        questionTextWindow.handleKeyEvent(ch2);
                     }
-                    questionTextWindow.closeWindow();
 
                     MainWindow::refreshWindow(row, col, 0, 0);
                     mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);

@@ -6,9 +6,11 @@
 using std::string;
 
 class TextWindow {
+    friend int main(int, char**);
     WINDOW* curWin;
     const string content;
-    int scrollPosition;
+    const int contentLength;
+    int totalLines;
 public:
     TextWindow(const TextWindow&) = delete;
     TextWindow() = delete;
@@ -16,9 +18,4 @@ public:
     explicit TextWindow(string content);
     WINDOW* drawWindow(int row, int col, int x, int y);
     void refreshWindow(int row, int col, int x, int y);
-    void handleKeyEvent(int key);
-    void closeWindow();
-    void refreshText();
-    void scrollUp();
-    void scrollDown();
 };
