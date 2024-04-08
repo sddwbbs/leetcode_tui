@@ -30,10 +30,34 @@ int main(int argc, char **argv)
             case 'k' :
                 if (mainMenuWindow.curItem > 0)
                     mainMenuWindow.menuUp();
+
+                MainWindow::refreshWindow(row, col, 0, 0);
+                mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
+                wrefresh(mainWin);
+                wrefresh(mainMenuWin);
+
+                if (mainMenuWindow.curItem == 1) {
+                    int rows, cols;
+                    getmaxyx(mainWin, rows, cols);
+                    mvwprintw(mainWin, rows - 2, 3, "Press 'r' to read the task and 'o' to open it in nvim");
+                    wrefresh(mainWin);
+                }
                 break;
             case 'j' :
                 if (mainMenuWindow.curItem < mainMenuWindow.menuSize - 1)
                     mainMenuWindow.menuDown();
+
+                MainWindow::refreshWindow(row, col, 0, 0);
+                mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
+                wrefresh(mainWin);
+                wrefresh(mainMenuWin);
+
+                if (mainMenuWindow.curItem == 1) {
+                    int rows, cols;
+                    getmaxyx(mainWin, rows, cols);
+                    mvwprintw(mainWin, rows - 2, 3, "Press 'r' to read the task and 'o' to open it in nvim");
+                    wrefresh(mainWin);
+                }
                 break;
             case 't':
             {
@@ -46,6 +70,24 @@ int main(int argc, char **argv)
                 wrefresh(mainWin);
             }
                 break;
+
+            case 'r':
+                if (mainMenuWindow.curItem == 1) {
+                    TextWindow questionTextWindow(DailyQuestionRequest::getQuestion());
+                    WINDOW* questionTextWin = questionTextWindow.drawWindow(30, 80, row / 2 - 15, col / 2 - 40);
+                    wrefresh(questionTextWin);
+
+                    questionTextWindow.handleKeyEvent();
+
+                    MainWindow::refreshWindow(row, col, 0, 0);
+                    mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
+
+                    wrefresh(mainWin);
+                    wrefresh(mainMenuWin);
+                }
+
+                break;
+
             case 10 :
                 if (mainMenuWindow.curItem == 0) {
                     endwin();
@@ -54,23 +96,6 @@ int main(int argc, char **argv)
                     refresh();
                 }
 
-                if (mainMenuWindow.curItem == 1) {
-                    TextWindow questionTextWindow(DailyQuestionRequest::getQuestion());
-                    WINDOW* questionTextWin = questionTextWindow.drawWindow(30, 80, row / 2 - 15, col / 2 - 40);
-                    wrefresh(questionTextWin);
-
-                    int ch2;
-                    questionTextWindow.handleKeyEvent(ch2);
-//                    while ((ch2 = getch()) != 27) { // Continue loop until ESC key is pressed
-//                        questionTextWindow.handleKeyEvent(ch2);
-//                    }
-
-                    MainWindow::refreshWindow(row, col, 0, 0);
-                    mainMenuWindow.refreshWindow(10, 30, row / 2 - 5, col / 2 - 15);
-
-                    wrefresh(mainWin);
-                    wrefresh(mainMenuWin);
-                }
                 break;
         }
         wrefresh(mainWin);

@@ -10,6 +10,21 @@ WINDOW* MainWindow::drawWindow(int row, int col, int x, int y) {
     curWin = newwin(row, col, x, y);
     refresh();
 
+    wattron(curWin, COLOR_PAIR(1));
+    mvwprintw(curWin, 1, 10, "\n"
+                             "                         $$\\                           $$\\      $$$$$$\\                  $$\\           \n"
+                             "                         $$ |                          $$ |    $$  __$$\\                 $$ |          \n"
+                             "                         $$ |      $$$$$$\\   $$$$$$\\ $$$$$$\\   $$ /  \\__| $$$$$$\\   $$$$$$$ | $$$$$$\\  \n"
+                             "                         $$ |     $$  __$$\\ $$  __$$\\\\_$$  _|  $$ |      $$  __$$\\ $$  __$$ |$$  __$$\\ \n"
+                             "                         $$ |     $$$$$$$$ |$$$$$$$$ | $$ |    $$ |      $$ /  $$ |$$ /  $$ |$$$$$$$$ |\n"
+                             "                         $$ |     $$   ____|$$   ____| $$ |$$\\ $$ |  $$\\ $$ |  $$ |$$ |  $$ |$$   ____|\n"
+                             "                         $$$$$$$$\\\\$$$$$$$\\ \\$$$$$$$\\  \\$$$$  |\\$$$$$$  |\\$$$$$$  |\\$$$$$$$ |\\$$$$$$$\\ \n"
+                             "                         \\________|\\_______| \\_______|  \\____/  \\______/  \\______/  \\_______| \\_______|\n"
+                             "                                                                                \n"
+                             "                                                                                \n"
+                             "                                                                                ");
+    wattroff(curWin, COLOR_PAIR(1));
+
     wattron(curWin, COLOR_PAIR(2));
     box(curWin, x, y);
     wattroff(curWin, COLOR_PAIR(2));
@@ -18,6 +33,7 @@ WINDOW* MainWindow::drawWindow(int row, int col, int x, int y) {
     mvwprintw(curWin, 0, col / 2 - 7, " LeetCode TUI ");
     wattroff(curWin, COLOR_PAIR(1));
 
+
     return curWin;
 }
 
@@ -25,6 +41,21 @@ void MainWindow::refreshWindow(int row, int col, int x, int y) {
     wresize(curWin, row, col);
     mvwin(curWin, x, y);
     werase(curWin);
+
+    wattron(curWin, COLOR_PAIR(1));
+    mvwprintw(curWin, 1, 10, "\n"
+                             "                         $$\\                           $$\\      $$$$$$\\                  $$\\           \n"
+                             "                         $$ |                          $$ |    $$  __$$\\                 $$ |          \n"
+                             "                         $$ |      $$$$$$\\   $$$$$$\\ $$$$$$\\   $$ /  \\__| $$$$$$\\   $$$$$$$ | $$$$$$\\  \n"
+                             "                         $$ |     $$  __$$\\ $$  __$$\\\\_$$  _|  $$ |      $$  __$$\\ $$  __$$ |$$  __$$\\ \n"
+                             "                         $$ |     $$$$$$$$ |$$$$$$$$ | $$ |    $$ |      $$ /  $$ |$$ /  $$ |$$$$$$$$ |\n"
+                             "                         $$ |     $$   ____|$$   ____| $$ |$$\\ $$ |  $$\\ $$ |  $$ |$$ |  $$ |$$   ____|\n"
+                             "                         $$$$$$$$\\\\$$$$$$$\\ \\$$$$$$$\\  \\$$$$  |\\$$$$$$  |\\$$$$$$  |\\$$$$$$$ |\\$$$$$$$\\ \n"
+                             "                         \\________|\\_______| \\_______|  \\____/  \\______/  \\______/  \\_______| \\_______|\n"
+                             "                                                                                \n"
+                             "                                                                                \n"
+                             "                                                                                ");
+    wattroff(curWin, COLOR_PAIR(1));
 
     wattron(curWin, COLOR_PAIR(2));
     box(curWin, x, y);

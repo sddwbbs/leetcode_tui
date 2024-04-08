@@ -26,7 +26,6 @@ WINDOW* TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
 
     curWin = newwin(rows, cols, x, y);
     scrollok(curWin, TRUE);
-    refresh();
 
     wattron(curWin, COLOR_PAIR(3));
     printWindowContent();
@@ -43,13 +42,37 @@ WINDOW* TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
     return curWin;
 }
 
-void TextWindow::refreshWindow(int rows, int cols, int x, int y) {}
+void TextWindow::refreshWindow(int _rows, int _cols, int x, int y) {
+    startLine = 0;
+    werase(curWin);
+    wrefresh(curWin);
+    rows = _rows, cols = _cols;
+    wresize(curWin, rows, cols);
+    mvwin(curWin, x, y);
 
-void TextWindow::handleKeyEvent(int ch) {
+    wattron(curWin, COLOR_PAIR(3));
+    printWindowContent();
+    wattroff(curWin, COLOR_PAIR(3));
+
+    wattron(curWin, COLOR_PAIR(4));
+    box(curWin, ACS_VLINE, ACS_HLINE);
+    wattroff(curWin, COLOR_PAIR(4));
+
+    wattron(curWin, COLOR_PAIR(3));
+    mvwprintw(curWin, 0, 6, " Question ");
+    wattroff(curWin, COLOR_PAIR(3));
+
+    wrefresh(curWin);
+}
+
+void TextWindow::handleKeyEvent() {
+    int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : scrollUp(); break;
             case 'j' : scrollDown(); break;
+            case 'c' : refreshWindow(20, 60, 10, 12); break;
+            case 'r' : return;
         }
     }
 }
@@ -75,11 +98,12 @@ void TextWindow::scrollDown() {
 void TextWindow::printWindowContent() {
     int lineBreak = 0;
     int curLine = 0;
-    for (int i = 0, linesToPrint = 1; i < contentLength && curLine < rows; ++i) {
-        if (content[i] == '\n' || i - lineBreak == cols) {
+    int linesToPrint = 1;
+    for (int i = 0; i < contentLength && linesToPrint < rows - 2; ++i) {
+        if (content[i] == '\n' || i - lineBreak == cols - 5) {
             if (i == contentLength - 1) {
                 if (curLine >= startLine) {
-                    mvwprintw(curWin, linesToPrint + 1, 2, "%s",
+                    mvwprintw(curWin, linesToPrint + 1, 2, " %s",
                               content.substr(lineBreak, i - lineBreak).c_str());
                     ++linesToPrint;
                 }
@@ -87,7 +111,7 @@ void TextWindow::printWindowContent() {
             }
 
             if (curLine >= startLine) {
-                mvwprintw(curWin, linesToPrint + 1, 2, "%s",
+                mvwprintw(curWin, linesToPrint + 1, 2, " %s",
                           content.substr(lineBreak, i - lineBreak).c_str());
                 ++linesToPrint;
             }

@@ -25,5 +25,5 @@ public:
     explicit TextWindow(string content);
     WINDOW* drawWindow(int rows, int cols, int x, int y);
     void refreshWindow(int rows, int cols, int x, int y);
-    void handleKeyEvent(int ch);
+    void handleKeyEvent();
 };
