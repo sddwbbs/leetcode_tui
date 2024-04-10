@@ -9,15 +9,22 @@ find_package(CURL REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined,leak")
 
 add_executable(leetcode_tui src/main.cpp
-        src/mainwindow.hpp
-        src/mainwindow.cpp
-        src/menuwindow.cpp
-        src/menuwindow.hpp
-        src/request.hpp
-        src/helpers/dailyquestionrequest.hpp
-        src/textwindow.cpp
-        src/textwindow.hpp
-        src/helpers/questionrequest.hpp
-        src/helpers/dailyquestionrequest.cpp
-        src/helpers/questionrequest.cpp)
+        src/mainWindow.hpp
+        src/mainWindow.cpp
+        src/menuWindow.cpp
+        src/menuWindow.hpp
+        src/helpers/requests/dailyTaskRequest.hpp
+        src/textWindow.cpp
+        src/textWindow.hpp
+        src/helpers/requests/dailyTaskRequest.cpp
+        src/app.cpp
+        src/app.hpp
+        src/mainMenuWindow.cpp
+        src/mainMenuWindow.hpp
+        src/languageMenuWindow.cpp
+        src/languageMenuWindow.hpp
+        src/helpers/task.hpp
+        src/helpers/task.cpp
+        src/helpers/requests/codeSnippetRequest.hpp
+)
 target_link_libraries(leetcode_tui ncurses curl)

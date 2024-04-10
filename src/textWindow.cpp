@@ -1,4 +1,4 @@
-#include "textwindow.hpp"
+#include "textWindow.hpp"
 
 #include <utility>
 
@@ -73,6 +73,7 @@ void TextWindow::handleKeyEvent() {
             case 'j' : scrollDown(); break;
             case 'c' : refreshWindow(20, 60, 10, 12); break;
             case 'r' : return;
+            case 'q' : return;
         }
     }
 }

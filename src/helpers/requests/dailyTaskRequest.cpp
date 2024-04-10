@@ -1,17 +1,6 @@
-#include "dailyquestionrequest.hpp"
+#include "dailyTaskRequest.hpp"
 
-string DailyQuestionRequest::titleSlug;
-string DailyQuestionRequest::title;
-string DailyQuestionRequest::htmlContent;
-string DailyQuestionRequest::content;
-time_t DailyQuestionRequest::refreshTime;
-
-size_t DailyQuestionRequest::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
-}
-
-bool DailyQuestionRequest::getTitleSlug() {
+json DailyTaskRequest::getTitleSlug() {
     CURL *curl;
     CURLcode res;
     string readBuffer;
@@ -46,12 +35,10 @@ bool DailyQuestionRequest::getTitleSlug() {
     }
 
     curl_global_cleanup();
-    titleSlug = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["titleSlug"];
-    title = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["title"];
-    return true;
+    return jsonResponse;
 }
 
-bool DailyQuestionRequest::getContent() {
+json DailyTaskRequest::getContent(string &titleSlug) {
     CURL *curl;
     CURLcode res;
     string readBuffer;
@@ -87,14 +74,13 @@ bool DailyQuestionRequest::getContent() {
     }
 
     curl_global_cleanup();
-    htmlContent = jsonResponse["data"]["question"]["content"];
-    return true;
+    return jsonResponse;
 }
 
-bool DailyQuestionRequest::saveToFile() {
+bool DailyTaskRequest::saveToFile(TaskData &dailyTask, time_t &dailyRefreshTime) {
     std::ofstream myFileOutput;
     myFileOutput.open("content.html");
-    myFileOutput << refreshTime << "<p>" << title << htmlContent;
+    myFileOutput << dailyRefreshTime<< "<p>" << dailyTask.title << dailyTask.htmlContent;
     myFileOutput.close();
 
     system("elinks -dump content.html > content.txt");
@@ -103,48 +89,10 @@ bool DailyQuestionRequest::saveToFile() {
     if (myFileInput.is_open()) {
         std::getline(myFileInput, date);
         std::stringstream buffer;
-        std::getline(myFileInput >> std::ws, title);
-        buffer << title << myFileInput.rdbuf();
-        content = buffer.str();
+        std::getline(myFileInput >> std::ws, dailyTask.title);
+        buffer << dailyTask.title << myFileInput.rdbuf();
+        dailyTask.content = buffer.str();
     } else return false;
     myFileInput.close();
     return true;
 }
-
-string DailyQuestionRequest::getQuestion() {
-    std::time_t curTime = std::time(nullptr);
-
-    refreshTime = curTime;
-    std::tm* refreshDate = std::localtime(&refreshTime);
-    refreshDate->tm_hour = 7;
-    refreshDate->tm_min = 0;
-    refreshTime = std::mktime(refreshDate);
-
-    string firstLine;
-    bool fileOpened = false;
-    time_t fileRefreshTime = refreshTime;
-    std::ifstream myFileInput("content.txt");
-    if (myFileInput.is_open()) {
-        fileOpened = true;
-        std::getline(myFileInput >> std::ws, firstLine);
-        std::stringstream buffer;
-        std::getline(myFileInput >> std::ws, title);
-        buffer << title << myFileInput.rdbuf();
-        content = buffer.str();
-        fileRefreshTime = std::stoi(firstLine);
-        if (fileRefreshTime > refreshTime) refreshTime = fileRefreshTime;
-        myFileInput.close();
-    }
-
-    if (!fileOpened || curTime >= refreshTime || curTime >= fileRefreshTime) {
-        refreshDate->tm_mday += 1;
-        refreshTime = std::mktime(refreshDate);
-        while (!getTitleSlug()) getTitleSlug();
-        while (!getContent()) getContent();
-        if (saveToFile()) return content;
-        else return "Error while saving file";
-    }
-
-    return content;
-}
-
