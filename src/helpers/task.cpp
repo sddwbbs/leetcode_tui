@@ -5,7 +5,6 @@ Task::Task()
     , dailyTask("", "", "", "")
     , singleTask("", "", "", "") {}
 
-
 TaskData& Task::getDailyTask() {
     std::time_t curTime = std::time(nullptr);
 
@@ -15,18 +14,21 @@ TaskData& Task::getDailyTask() {
     refreshDate->tm_min = 0;
     dailyRefreshTime = std::mktime(refreshDate);
 
-    string firstLine;
+    string date;
+    string titleSlug;
     bool fileOpened = false;
     time_t fileRefreshTime = dailyRefreshTime;
     std::ifstream myFileInput("content.txt");
     if (myFileInput.is_open()) {
         fileOpened = true;
-        std::getline(myFileInput >> std::ws, firstLine);
+        std::getline(myFileInput >> std::ws, date);
+        std::getline(myFileInput >> std::ws, titleSlug);
+        dailyTask.titleSlug = titleSlug;
         std::stringstream buffer;
         std::getline(myFileInput >> std::ws, dailyTask.title);
         buffer << dailyTask.title << myFileInput.rdbuf();
         dailyTask.content = buffer.str();
-        fileRefreshTime = std::stoi(firstLine);
+        fileRefreshTime = std::stoi(date);
         if (fileRefreshTime > dailyRefreshTime) dailyRefreshTime = fileRefreshTime;
         myFileInput.close();
     }
@@ -61,7 +63,7 @@ TaskData& Task::getSingleTask() {
 string Task::getCodeSnippet(string &titleSlug, string language, TaskData& task) {
     json jsonResponse;
 
-    jsonResponse = CodeSnippetRequest::getCodeSnippet(titleSlug, language);
+    jsonResponse = CodeSnippetRequest::getCodeSnippet(titleSlug);
 
     for (const auto& snippet : jsonResponse["data"]["question"]["codeSnippets"]) {
         string lang = snippet["lang"];

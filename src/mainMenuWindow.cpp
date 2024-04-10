@@ -100,6 +100,15 @@ int MainMenuWindow::handleKeyEvent(Task* task) {
 
             case 'o' : {
                 if (curItem == 1) {
+                    endwin();
+                    std::ofstream myFileInput;
+                    myFileInput.open("dailyTask.cpp");
+                    string dailyTitle = task->getDailyTask().titleSlug;
+                    myFileInput << task->getCodeSnippet(task->getDailyTask().titleSlug, "C++", task->getDailyTask());
+                    myFileInput.close();
+                    system("nvim dailyTask.cpp");
+                    initscr();
+                    refresh();
                 }
             }
             break;

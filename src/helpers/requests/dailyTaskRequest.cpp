@@ -80,14 +80,17 @@ json DailyTaskRequest::getContent(string &titleSlug) {
 bool DailyTaskRequest::saveToFile(TaskData &dailyTask, time_t &dailyRefreshTime) {
     std::ofstream myFileOutput;
     myFileOutput.open("content.html");
-    myFileOutput << dailyRefreshTime<< "<p>" << dailyTask.title << dailyTask.htmlContent;
+    myFileOutput << dailyRefreshTime<< "<p>" << dailyTask.titleSlug << "<p>" << dailyTask.title << dailyTask.htmlContent;
     myFileOutput.close();
 
     system("elinks -dump content.html > content.txt");
     std::ifstream myFileInput ("content.txt");
-    string date;
+    string temp;
+    string titleSlug;
     if (myFileInput.is_open()) {
-        std::getline(myFileInput, date);
+        std::getline(myFileInput >> std::ws, temp);
+        std::getline(myFileInput >> std::ws, temp);
+        dailyTask.titleSlug = temp;
         std::stringstream buffer;
         std::getline(myFileInput >> std::ws, dailyTask.title);
         buffer << dailyTask.title << myFileInput.rdbuf();

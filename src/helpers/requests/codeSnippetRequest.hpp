@@ -13,7 +13,7 @@ class CodeSnippetRequest {
         return size * nmemb;
     }
 public:
-    static json getCodeSnippet(string &titleSlug, string &language) {
+    static json getCodeSnippet(string &titleSlug) {
         CURL *curl;
         CURLcode res;
         string readBuffer;
