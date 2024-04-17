@@ -2,38 +2,53 @@
 
 #include <string>
 #include <nlohmann/json.hpp>
+#include <pqxx/pqxx>
+#include <gumbo.h>
+#include <iostream>
 
 #include "requests/dailyTaskRequest.hpp"
-//include "singleTaskRequest.hpp"
 #include "requests/codeSnippetRequest.hpp"
-//include "runCodeRequest
-//include "submitCodeRequest
 
 using std::string;
 using json = nlohmann::json;
 
 struct TaskData {
+    int id;
+    int frontendId;
     string titleSlug;
     string title;
-    string htmlContent;
+    string difficulty;
     string content;
-    string htmlCodeSnippet;
-    string codeSnippet;
+    json topicTags;
+    json codeSnippets;
+    bool paidOnly;
 };
 
 class Task {
-    time_t dailyRefreshTime;
-    TaskData dailyTask;
+    pqxx::connection &conn;
+
     TaskData singleTask;
 
-public:
-    Task();
-    Task(Task&) = delete;
-    Task& operator=(Task&) = delete;
+    void extractText(GumboNode* node, string& plainText);
 
-    TaskData& getDailyTask();
-    TaskData& getSingleTask();
-    string getCodeSnippet(string &titleSlug, string language, TaskData& task);
+    void saveToDb(int counter);
+
+    void readFromDb();
+
+public:
+    Task() = delete;
+
+    Task(Task &) = delete;
+
+    Task &operator=(Task &) = delete;
+
+    explicit Task(pqxx::connection &conn);
+
+    TaskData &getDailyTask();
+
+    TaskData &getSingleTask();
+
     string runCode();
+
     string submitCode();
 };

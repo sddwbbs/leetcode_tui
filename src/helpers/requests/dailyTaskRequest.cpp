@@ -1,101 +1,70 @@
+#include <cpr/cpr.h>
+
 #include "dailyTaskRequest.hpp"
 
-json DailyTaskRequest::getTitleSlug() {
-    CURL *curl;
-    CURLcode res;
-    string readBuffer;
+json DailyTaskRequest::getAllData() {
+    json result;
     json jsonResponse;
 
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "https://leetcode.com/graphql/");
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+    auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                              cpr::Header{{"Content-Type", "application/json"}},
+                              cpr::Body{"{\n"
+                                        "\t\"query\": \"\\n    query questionOfToday {\\n  activeDailyCodingChallengeQuestion {\\n      link\\n    question {\\n      acRate\\n      difficulty\\n      freqBar\\n      frontendQuestionId: questionFrontendId\\n      isFavor\\n      paidOnly: isPaidOnly\\n      status\\n      title\\n      titleSlug\\n          topicTags {\\n        name\\n        id\\n        slug\\n      }\\n    }\\n  }\\n}\\n    \",\n"
+                                        "\t\"variables\": {},\n"
+                                        "\t\"operationName\": \"questionOfToday\"\n"
+                                        "}"});
 
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "{\"query\":\"\\n    query questionOfToday {\\n  activeDailyCodingChallengeQuestion {\\n    date\\n    userStatus\\n    link\\n    question {\\n      acRate\\n      difficulty\\n      freqBar\\n      frontendQuestionId: questionFrontendId\\n      isFavor\\n      paidOnly: isPaidOnly\\n      status\\n      title\\n      titleSlug\\n      hasVideoSolution\\n      hasSolution\\n      topicTags {\\n        name\\n        id\\n        slug\\n      }\\n    }\\n  }\\n}\\n    \",\"variables\":{},\"operationName\":\"questionOfToday\"}");
-
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-            return false;
-        else {
-            try {
-                jsonResponse = json::parse(readBuffer);
-            } catch (const std::exception& e) {
-                return false;
-            }
-        }
-        curl_easy_cleanup(curl);
-        curl_slist_free_all(headers);
+    if (response.status_code == 200) {
+        jsonResponse = json::parse(response.text);
+        result["difficulty"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["difficulty"];
+        result["title"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["title"];
+        result["titleSlug"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["titleSlug"];
+        result["topicTags"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["topicTags"];
+        result["frontendId"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["frontendQuestionId"];
+        result["paidOnly"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["paidOnly"];
     } else {
-        return false;
+        return json::parse("");
     }
 
-    curl_global_cleanup();
-    return jsonResponse;
-}
+    string titleSlug = result["titleSlug"];
+    string requestBody = "{\n"
+                         "\t\"query\": \"\\n    query questionContent($titleSlug: String!) {\\n  question(titleSlug: $titleSlug) {\\n    content\\n    mysqlSchemas\\n    dataSchemas\\n  }\\n}\\n    \",\n"
+                         "\t\"variables\": {\n"
+                         "\t\t\"titleSlug\": \"" + titleSlug + "\"\n"
+                         "\t},\n"
+                         "\t\"operationName\": \"questionContent\"\n"
+                         "}";
 
-json DailyTaskRequest::getContent(string &titleSlug) {
-    CURL *curl;
-    CURLcode res;
-    string readBuffer;
-    json jsonResponse;
-    string payload = "{\"query\":\"\\n    query questionContent($titleSlug: String!) {\\n  question(titleSlug: $titleSlug) {\\n    content\\n    mysqlSchemas\\n    dataSchemas\\n  }\\n}\\n    \",\"variables\":{\"titleSlug\":\"" + titleSlug + "\"},\"operationName\":\"questionContent\"}";
+    response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                         cpr::Header{{"Content-Type", "application/json"}},
+                         cpr::Body{requestBody});
 
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, "https://leetcode.com/graphql/");
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.c_str());
-
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-            return false;
-        else {
-            try {
-                jsonResponse = json::parse(readBuffer);
-            } catch (const std::exception& e) {
-                return false;
-            }
-        }
-        curl_easy_cleanup(curl);
-        curl_slist_free_all(headers);
+    if (response.status_code == 200) {
+        jsonResponse = json::parse(response.text);
+        result["content"] = jsonResponse["data"]["question"]["content"];
     } else {
-        return false;
+        return json::parse("");
     }
 
-    curl_global_cleanup();
-    return jsonResponse;
-}
+    requestBody = "{\n"
+                  "\t\"query\": \"\\n    query questionEditorData($titleSlug: String!) {\\n  question(titleSlug: $titleSlug) {\\n    questionId\\n    questionFrontendId\\n    codeSnippets {\\n      lang\\n      langSlug\\n      code\\n    }\\n    envInfo\\n    enableRunCode\\n    hasFrontendPreview\\n    frontendPreviews\\n  }\\n}\\n    \",\n"
+                  "\t\"variables\": {\n"
+                  "\t\t\"titleSlug\": \"" + titleSlug + "\"\n"
+                  "\t},\n"
+                  "\t\"operationName\": \"questionEditorData\"\n"
+                  "}";
 
-bool DailyTaskRequest::saveToFile(TaskData &dailyTask, time_t &dailyRefreshTime) {
-    std::ofstream myFileOutput;
-    myFileOutput.open("content.html");
-    myFileOutput << dailyRefreshTime<< "<p>" << dailyTask.titleSlug << "<p>" << dailyTask.title << dailyTask.htmlContent;
-    myFileOutput.close();
+    response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                         cpr::Header{{"Content-Type", "application/json"}},
+                         cpr::Body{requestBody});
 
-    system("elinks -dump content.html > content.txt");
-    std::ifstream myFileInput ("content.txt");
-    string temp;
-    string titleSlug;
-    if (myFileInput.is_open()) {
-        std::getline(myFileInput >> std::ws, temp);
-        std::getline(myFileInput >> std::ws, temp);
-        dailyTask.titleSlug = temp;
-        std::stringstream buffer;
-        std::getline(myFileInput >> std::ws, dailyTask.title);
-        buffer << dailyTask.title << myFileInput.rdbuf();
-        dailyTask.content = buffer.str();
-    } else return false;
-    myFileInput.close();
-    return true;
+    if (response.status_code == 200) {
+        jsonResponse = json::parse(response.text);
+        result["id"] = jsonResponse["data"]["question"]["questionId"];
+        result["codeSnippets"] = jsonResponse["data"]["question"]["codeSnippets"];
+    } else {
+        return json::parse("");
+    }
+
+    return result;
 }

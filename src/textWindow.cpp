@@ -2,27 +2,22 @@
 
 #include <utility>
 
-TextWindow::TextWindow(string content)
-    : curWin(nullptr)
-    , rows(0)
-    , cols(0)
-    , content(std::move(content))
-    , contentLength(0)
-    , contentLines(0)
-    , startLine(0) {}
+TextWindow::TextWindow(TaskData &taskData)
+        : curWin(nullptr), rows(0), cols(0), taskData(taskData), contentLength(0), contentLines(0),
+          startLine(0) {}
 
-WINDOW* TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
+WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols;
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     init_pair(5, COLOR_BLACK, COLOR_CYAN); // Color pair for yellow text on blue background
 
-    for (auto &elem : content) {
+    for (auto &elem: taskData.content) {
         if (elem == '\n') ++contentLines;
     }
 
-    contentLength = static_cast<int>(content.length());
+    contentLength = static_cast<int>(taskData.content.length());
 
     curWin = newwin(rows, cols, x, y);
     scrollok(curWin, TRUE);
@@ -69,11 +64,19 @@ void TextWindow::handleKeyEvent() {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
-            case 'k' : scrollUp(); break;
-            case 'j' : scrollDown(); break;
-            case 'c' : refreshWindow(20, 60, 10, 12); break;
-            case 'r' : return;
-            case 'q' : return;
+            case 'k' :
+                scrollUp();
+                break;
+            case 'j' :
+                scrollDown();
+                break;
+            case 'c' :
+                refreshWindow(20, 60, 10, 12);
+                break;
+            case 'r' :
+                return;
+            case 'q' :
+                return;
         }
     }
 }
@@ -101,11 +104,11 @@ void TextWindow::printWindowContent() {
     int curLine = 0;
     int linesToPrint = 1;
     for (int i = 0; i < contentLength && linesToPrint < rows - 2; ++i) {
-        if (content[i] == '\n' || i - lineBreak == cols - 5) {
+        if (taskData.content[i] == '\n' || i - lineBreak == cols - 5) {
             if (i == contentLength - 1) {
                 if (curLine >= startLine) {
                     mvwprintw(curWin, linesToPrint + 1, 2, " %s",
-                              content.substr(lineBreak, i - lineBreak).c_str());
+                              taskData.content.substr(lineBreak, i - lineBreak).c_str());
                     ++linesToPrint;
                 }
                 break;
@@ -113,11 +116,11 @@ void TextWindow::printWindowContent() {
 
             if (curLine >= startLine) {
                 mvwprintw(curWin, linesToPrint + 1, 2, " %s",
-                          content.substr(lineBreak, i - lineBreak).c_str());
+                          taskData.content.substr(lineBreak, i - lineBreak).c_str());
                 ++linesToPrint;
             }
 
-            while (content[i] == '\n' || content[i] == ' ') ++i;
+            while (taskData.content[i] == '\n' || taskData.content[i] == ' ') ++i;
             lineBreak = i;
             ++curLine;
         }

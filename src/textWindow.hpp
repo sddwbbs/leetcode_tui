@@ -3,27 +3,41 @@
 #include <ncurses.h>
 #include <string>
 
+#include "helpers/task.hpp"
+
 using std::string;
 
+struct TaskData;
+
 class TextWindow {
-    friend int main(int, char**);
-    WINDOW* curWin;
+    WINDOW *curWin;
     int rows;
     int cols;
-    const string content;
+    TaskData &taskData;
     int contentLength;
     int contentLines;
     int startLine;
+
     void scrollUp();
+
     void scrollDown();
+
     void printWindowContent();
+
     void clearWindowContent();
+
 public:
-    TextWindow(const TextWindow&) = delete;
+    TextWindow(const TextWindow &) = delete;
+
     TextWindow() = delete;
-    TextWindow& operator=(const TextWindow&) = delete;
-    explicit TextWindow(string content);
-    WINDOW* drawWindow(int rows, int cols, int x, int y);
+
+    TextWindow &operator=(const TextWindow &) = delete;
+
+    explicit TextWindow(TaskData &taskData);
+
+    WINDOW *drawWindow(int rows, int cols, int x, int y);
+
     void refreshWindow(int rows, int cols, int x, int y);
+
     void handleKeyEvent();
 };

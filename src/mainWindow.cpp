@@ -1,15 +1,16 @@
 #include "mainWindow.hpp"
 
-WINDOW* MainWindow::curWin = nullptr;
+WINDOW *MainWindow::curWin = nullptr;
 int MainWindow::rows = 0;
 int MainWindow::cols = 0;
 int MainWindow::x = 0;
 int MainWindow::y = 0;
 
-WINDOW* MainWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
+WINDOW *MainWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols;
     x = _x, y = _y;
+    init_color(COLOR_BLACK, 82, 35, 72);
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
 

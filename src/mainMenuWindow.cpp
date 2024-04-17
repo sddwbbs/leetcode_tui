@@ -1,9 +1,9 @@
 #include "mainMenuWindow.hpp"
 
-MainMenuWindow::MainMenuWindow(WINDOW* parentWin, const vector<string> &menuItems)
-    : MenuWindow(parentWin, menuItems) {}
+MainMenuWindow::MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
+        : MenuWindow(parentWin, menuItems) {}
 
-WINDOW* MainMenuWindow::drawWindow(int row, int col, int x, int y) {
+WINDOW *MainMenuWindow::drawWindow(int row, int col, int x, int y) {
     if (curWin != nullptr) return curWin;
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
@@ -57,7 +57,7 @@ void MainMenuWindow::refreshWindow(int row, int col, int x, int y) {
     }
 }
 
-int MainMenuWindow::handleKeyEvent(Task* task) {
+int MainMenuWindow::handleKeyEvent(Task *task) {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
@@ -85,10 +85,10 @@ int MainMenuWindow::handleKeyEvent(Task* task) {
 
             case 'r' : {
                 if (curItem == 1) {
-                    TextWindow dailyTaskTextWindow(task->getDailyTask().content);
+                    TextWindow dailyTaskTextWindow(task->getDailyTask());
                     int rows, cols;
                     getmaxyx(stdscr, rows, cols);
-                    WINDOW* dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
+                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
                     wrefresh(dailyTaskTextWin);
 
                     dailyTaskTextWindow.handleKeyEvent();
@@ -100,20 +100,31 @@ int MainMenuWindow::handleKeyEvent(Task* task) {
 
             case 'o' : {
                 if (curItem == 1) {
-                    endwin();
-                    std::ofstream myFileInput;
-                    myFileInput.open("dailyTask.cpp");
-                    string dailyTitle = task->getDailyTask().titleSlug;
-                    myFileInput << task->getCodeSnippet(task->getDailyTask().titleSlug, "C++", task->getDailyTask());
-                    myFileInput.close();
-                    system("nvim dailyTask.cpp");
-                    initscr();
-                    refresh();
+//                    std::ofstream myFileInput;
+//                    myFileInput.open("dailyTask.cpp");
+//                    myFileInput << "/*" << task->getDailyTask().content << "*/" << "\n\n"
+//                                << task->getCodeSnippet(task->getDailyTask().titleSlug, "C++", task->getDailyTask());
+//                    myFileInput.close();
+//                    system("nvim dailyTask.cpp");
+//                    endwin();
+//                    initscr();
+//                    return static_cast<int>(menuCodes::refreshWin);
                 }
             }
             break;
 
-            case 'q' : return static_cast<int>(menuCodes::quit);
+            case 10 : {
+                if (curItem == 0) {
+                    system("nvim");
+                    endwin();
+                    initscr();
+                    return static_cast<int>(menuCodes::refreshWin);
+                }
+            }
+            break;
+
+            case 'q' :
+                return static_cast<int>(menuCodes::quit);
         }
 
     }
