@@ -20,16 +20,12 @@ void Task::extractText(GumboNode *node, std::string &plainText) {
     }
 }
 
-void Task::saveToDb(int counter) {
-    pqxx::work tx{conn};
-
-    if (counter)
+void Task::saveToDb(bool dailyInDb, pqxx::work &tx) {
+    if (dailyInDb)
         try {
-            tx.exec_params("UPDATE leetcode_tui.tasks SET refresh_time = NULL WHERE refresh_time IS NOT NULL");
-            tx.commit();
+            tx.exec("UPDATE leetcode_tui.tasks SET refresh_time = NULL WHERE refresh_time IS NOT NULL");
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
-            tx.abort();
         }
 
     std::time_t curTime = std::time(nullptr);
@@ -62,55 +58,42 @@ void Task::saveToDb(int counter) {
         try {
             tx.exec_params("UPDATE leetcode_tui.tasks SET refresh_time = $1 WHERE id = $2", refreshedTime,
                            singleTask.id);
-            tx.commit();
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
-            tx.abort();
         }
     } else {
         try {
-            pqxx::result result = tx.exec_params(
+            tx.exec_params(
                     "INSERT INTO leetcode_tui.tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
                     singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
                     singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
                     singleTask.codeSnippets.dump(), singleTask.paidOnly, refreshedTime);
-
-            tx.commit();
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
-            tx.abort();
         }
     }
-
-    tx.abort();
 }
 
-void Task::readFromDb() {
-    pqxx::work tx{conn};
-
+void Task::readFromDb(pqxx::work &tx) {
     try {
-        pqxx::result result = tx.exec_params(
+        pqxx::result result = tx.exec(
                 "SELECT id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only "
                 "FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
 
-        for (const auto &row: result) {
-            singleTask.id = row["id"].as<int>();
-            singleTask.frontendId = row["frontend_id"].as<int>();
-            singleTask.titleSlug = row["title_slug"].as<string>();
-            singleTask.title = row["title"].as<string>();
-            singleTask.difficulty = row["difficulty"].as<string>();
-            singleTask.content = row["content"].as<string>();
-            singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
-            singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
-            singleTask.paidOnly = row["paid_only"].as<bool>();
-        }
+        const auto &row = result.begin();
+        singleTask.id = row["id"].as<int>();
+        singleTask.frontendId = row["frontend_id"].as<int>();
+        singleTask.titleSlug = row["title_slug"].as<string>();
+        singleTask.title = row["title"].as<string>();
+        singleTask.difficulty = row["difficulty"].as<string>();
+        singleTask.content = row["content"].as<string>();
+        singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
+        singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
+        singleTask.paidOnly = row["paid_only"].as<bool>();
     } catch (std::exception const &e) {
         std::cerr << "ERROR: " << e.what() << '\n';
-        tx.abort();
     }
-
-    tx.abort();
 }
 
 TaskData &Task::getDailyTask() {
@@ -120,26 +103,25 @@ TaskData &Task::getDailyTask() {
 
     pqxx::work tx{conn};
 
-    int counter = 0;
+    bool dailyInDb = false;
     try {
-        counter = tx.query_value<int>(
+        dailyInDb = tx.query_value<bool>(
                 "SELECT COUNT(*) FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
     } catch (std::exception const &e) {
-        std::cerr << "ERROR: " << e.what() << '\n';
+        std::cerr << '\n' << "ERROR: " << e.what() << '\n';
     }
 
-    time_t refreshTimeFromDb;
-    if (counter) {
+    time_t refreshTimeFromDb = 0;
+    if (dailyInDb) {
         try {
             refreshTimeFromDb = tx.query_value<time_t>(
                     "SELECT refresh_time FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
         } catch (std::exception const &e) {
-            std::cerr << "ERROR: " << e.what() << '\n';
+            std::cerr << '\n' << "ERROR: " << e.what() << '\n';
         }
     }
 
-    if (!counter || curTime >= refreshTimeFromDb) {
-        tx.abort();
+    if (!dailyInDb || curTime >= refreshTimeFromDb) {
         json jsonDailyTask = DailyTaskRequest::getAllData();
 
         singleTask.id = std::stoi(jsonDailyTask["id"].get<string>());
@@ -162,14 +144,14 @@ TaskData &Task::getDailyTask() {
         singleTask.codeSnippets = jsonDailyTask["codeSnippets"];
         singleTask.paidOnly = jsonDailyTask["paidOnly"].get<bool>();
 
-        saveToDb(counter);
+        saveToDb(dailyInDb, tx);
+
+        tx.commit();
 
         return singleTask;
     }
 
-    tx.abort();
-
-    readFromDb();
+    readFromDb(tx);
 
     return singleTask;
 }

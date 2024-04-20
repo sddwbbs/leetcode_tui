@@ -31,9 +31,9 @@ class Task {
 
     void extractText(GumboNode* node, string& plainText);
 
-    void saveToDb(int counter);
+    void saveToDb(bool dailyInDb, pqxx::work &tx);
 
-    void readFromDb();
+    void readFromDb(pqxx::work &tx);
 
 public:
     Task() = delete;
