@@ -3,7 +3,7 @@
 #include <ncurses.h>
 #include <string>
 
-#include "helpers/task.hpp"
+#include "../helpers/task.hpp"
 
 using std::string;
 
@@ -17,6 +17,9 @@ class TextWindow {
     int contentLength;
     int contentLines;
     int startLine;
+    int startSymbol;
+
+    void moveStartSymbol();
 
     void scrollUp();
 

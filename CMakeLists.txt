@@ -11,19 +11,19 @@ find_package(PostgreSQL REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined,leak")
 
 add_executable(leetcode_tui src/main.cpp
-        src/mainWindow.hpp
-        src/mainWindow.cpp
-        src/menuWindow.cpp
-        src/menuWindow.hpp
+        src/windows/mainWindow.hpp
+        src/windows/mainWindow.cpp
+        src/windows/menuWindow.cpp
+        src/windows/menuWindow.hpp
         src/helpers/requests/dailyTaskRequest.hpp
-        src/textWindow.cpp
-        src/textWindow.hpp
+        src/windows/textWindow.cpp
+        src/windows/textWindow.hpp
         src/app.cpp
         src/app.hpp
-        src/mainMenuWindow.cpp
-        src/mainMenuWindow.hpp
-        src/languageMenuWindow.cpp
-        src/languageMenuWindow.hpp
+        src/windows/mainMenuWindow.cpp
+        src/windows/mainMenuWindow.hpp
+        src/windows/languageMenuWindow.cpp
+        src/windows/languageMenuWindow.hpp
         src/helpers/task.hpp
         src/helpers/task.cpp
         src/helpers/requests/codeSnippetRequest.hpp

@@ -2,8 +2,8 @@
 #include <iostream>
 
 #include "app.hpp"
-#include "mainMenuWindow.hpp"
-#include "mainWindow.hpp"
+#include "windows/mainMenuWindow.hpp"
+#include "windows/mainWindow.hpp"
 
 void App::startApp() {
     initscr();

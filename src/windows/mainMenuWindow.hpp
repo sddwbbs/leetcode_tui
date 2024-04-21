@@ -2,7 +2,7 @@
 
 #include "menuWindow.hpp"
 #include "textWindow.hpp"
-#include "helpers/task.hpp"
+#include "../helpers/task.hpp"
 
 class MainMenuWindow : public MenuWindow {
 public:

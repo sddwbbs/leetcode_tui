@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mainWindow.hpp"
-#include "menuWindow.hpp"
-#include "textWindow.hpp"
+#include "windows/mainWindow.hpp"
+#include "windows/menuWindow.hpp"
+#include "windows/textWindow.hpp"
 #include "helpers/task.hpp"
 
 #include <ncurses.h>

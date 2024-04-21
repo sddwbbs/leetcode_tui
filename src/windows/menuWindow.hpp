@@ -5,7 +5,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
-#include "helpers/task.hpp"
+#include "../helpers/task.hpp"
 
 using std::vector;
 using std::string;

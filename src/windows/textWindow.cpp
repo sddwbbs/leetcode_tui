@@ -1,7 +1,5 @@
 #include "textWindow.hpp"
 
-#include <utility>
-
 TextWindow::TextWindow(TaskData &taskData)
         : curWin(nullptr), rows(0), cols(0), taskData(taskData), contentLength(0), contentLines(0),
           startLine(0) {}
@@ -13,11 +11,15 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     init_pair(5, COLOR_BLACK, COLOR_CYAN); // Color pair for yellow text on blue background
 
-    for (auto &elem: taskData.content) {
-        if (elem == '\n') ++contentLines;
-    }
-
     contentLength = static_cast<int>(taskData.content.length());
+
+    for (int i = 0, startOfLine = 0; i < contentLength; ++i) {
+        if (taskData.content[i] == '\n' || i - startOfLine == cols - 4) {
+            ++contentLines;
+            while (taskData.content[i] == '\n' || taskData.content[i] == ' ') ++i;
+            startOfLine = i;
+        }
+    }
 
     curWin = newwin(rows, cols, x, y);
     scrollok(curWin, TRUE);
@@ -31,7 +33,7 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
     wattroff(curWin, COLOR_PAIR(4));
 
     wattron(curWin, COLOR_PAIR(3));
-    mvwprintw(curWin, 0, 6, " Question ");
+    mvwprintw(curWin, 0, 6, " %s ", taskData.title.c_str());
     wattroff(curWin, COLOR_PAIR(3));
 
     return curWin;
@@ -91,7 +93,7 @@ void TextWindow::scrollUp() {
 }
 
 void TextWindow::scrollDown() {
-    if (startLine != contentLines && contentLines - startLine > rows) {
+    if (contentLines >= rows - 4 && contentLines - startLine >= rows - 4) {
         clearWindowContent();
         ++startLine;
         printWindowContent();
@@ -100,29 +102,20 @@ void TextWindow::scrollDown() {
 }
 
 void TextWindow::printWindowContent() {
-    int lineBreak = 0;
-    int curLine = 0;
-    int linesToPrint = 1;
-    for (int i = 0; i < contentLength && linesToPrint < rows - 2; ++i) {
-        if (taskData.content[i] == '\n' || i - lineBreak == cols - 5) {
-            if (i == contentLength - 1) {
-                if (curLine >= startLine) {
-                    mvwprintw(curWin, linesToPrint + 1, 2, " %s",
-                              taskData.content.substr(lineBreak, i - lineBreak).c_str());
-                    ++linesToPrint;
-                }
-                break;
-            }
+    int startOfLine = 0;
+    int i = 0;
+    int line = 0;
+    int linesToPrint = 0;
 
-            if (curLine >= startLine) {
-                mvwprintw(curWin, linesToPrint + 1, 2, " %s",
-                          taskData.content.substr(lineBreak, i - lineBreak).c_str());
-                ++linesToPrint;
+    for (; i <= contentLength && linesToPrint < rows - 4; ++i) {
+        if (taskData.content[i] == '\n' || i - startOfLine == cols - 4 || contentLength - i == 0) {
+            if (line >= startLine) {
+                string temp = taskData.content.substr(startOfLine, i - startOfLine);
+                mvwprintw(curWin, linesToPrint++ + 2, 2, "%s", temp.c_str());
             }
-
+            ++line;
             while (taskData.content[i] == '\n' || taskData.content[i] == ' ') ++i;
-            lineBreak = i;
-            ++curLine;
+            startOfLine = i;
         }
     }
 }
@@ -135,7 +128,7 @@ void TextWindow::clearWindowContent() {
     wattroff(curWin, COLOR_PAIR(4));
 
     wattron(curWin, COLOR_PAIR(3));
-    mvwprintw(curWin, 0, 6, " Question ");
+    mvwprintw(curWin, 0, 6, " %s ", taskData.title.c_str());
     wattroff(curWin, COLOR_PAIR(3));
 
     wrefresh(curWin);
