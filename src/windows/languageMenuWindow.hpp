@@ -1,8 +1,7 @@
-//
-// Created by sdwbs on 09.04.24.
-//
+#pragma once
 
-#ifndef LEETCODE_TUI_LANGUAGEMENUWINDOW_HPP
-#define LEETCODE_TUI_LANGUAGEMENUWINDOW_HPP
+#include "menuWindow.hpp"
 
-#endif //LEETCODE_TUI_LANGUAGEMENUWINDOW_HPP
+class LanguageMenuWindow : public MenuWindow {
+
+};

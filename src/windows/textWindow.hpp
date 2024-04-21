@@ -13,21 +13,18 @@ class TextWindow {
     WINDOW *curWin;
     int rows;
     int cols;
-    TaskData &taskData;
+    const TaskData &taskData;
     int contentLength;
     int contentLines;
     int startLine;
-    int startSymbol;
-
-    void moveStartSymbol();
 
     void scrollUp();
 
     void scrollDown();
 
-    void printWindowContent();
+    void printWindowContent() const;
 
-    void clearWindowContent();
+    void clearWindowContent() const;
 
 public:
     TextWindow(const TextWindow &) = delete;
@@ -36,7 +33,7 @@ public:
 
     TextWindow &operator=(const TextWindow &) = delete;
 
-    explicit TextWindow(TaskData &taskData);
+    explicit TextWindow(const TaskData &taskData);
 
     WINDOW *drawWindow(int rows, int cols, int x, int y);
 

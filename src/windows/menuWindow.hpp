@@ -43,9 +43,9 @@ public:
 
     const char *getMenuItem(int index);
 
-    int getCurItem() const;
+    [[nodiscard]] int getCurItem() const;
 
-    int getMenuSize() const;
+    [[nodiscard]] int getMenuSize() const;
 
     virtual int handleKeyEvent(Task *task) = 0;
 };

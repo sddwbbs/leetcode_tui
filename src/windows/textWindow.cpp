@@ -1,6 +1,6 @@
 #include "textWindow.hpp"
 
-TextWindow::TextWindow(TaskData &taskData)
+TextWindow::TextWindow(const TaskData &taskData)
         : curWin(nullptr), rows(0), cols(0), taskData(taskData), contentLength(0), contentLines(0),
           startLine(0) {}
 
@@ -56,7 +56,7 @@ void TextWindow::refreshWindow(int _rows, int _cols, int x, int y) {
     wattroff(curWin, COLOR_PAIR(4));
 
     wattron(curWin, COLOR_PAIR(3));
-    mvwprintw(curWin, 0, 6, " Question ");
+    mvwprintw(curWin, 0, 6, " %s ", taskData.title.c_str());
     wattroff(curWin, COLOR_PAIR(3));
 
     wrefresh(curWin);
@@ -101,17 +101,17 @@ void TextWindow::scrollDown() {
     }
 }
 
-void TextWindow::printWindowContent() {
+void TextWindow::printWindowContent() const {
     int startOfLine = 0;
     int i = 0;
     int line = 0;
     int linesToPrint = 0;
 
     for (; i <= contentLength && linesToPrint < rows - 4; ++i) {
-        if (taskData.content[i] == '\n' || i - startOfLine == cols - 4 || contentLength - i == 0) {
+        if (taskData.content[i] == '\n' || i - startOfLine == cols - 6 || contentLength - i == 0) {
             if (line >= startLine) {
                 string temp = taskData.content.substr(startOfLine, i - startOfLine);
-                mvwprintw(curWin, linesToPrint++ + 2, 2, "%s", temp.c_str());
+                mvwprintw(curWin, linesToPrint++ + 2, 3, "%s", temp.c_str());
             }
             ++line;
             while (taskData.content[i] == '\n' || taskData.content[i] == ' ') ++i;
@@ -120,7 +120,7 @@ void TextWindow::printWindowContent() {
     }
 }
 
-void TextWindow::clearWindowContent() {
+void TextWindow::clearWindowContent() const {
     werase(curWin);
 
     wattron(curWin, COLOR_PAIR(4));
