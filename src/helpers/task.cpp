@@ -161,7 +161,9 @@ TaskData &Task::getSingleTask() {
 }
 
 string Task::runCode() {
-    return "hello";
+    //string getTestcases
+    //string run
+    //string check
 }
 
 string Task::submitCode() {

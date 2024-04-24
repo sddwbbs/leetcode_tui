@@ -13,7 +13,8 @@ class TextWindow {
     WINDOW *curWin;
     int rows;
     int cols;
-    const TaskData &taskData;
+    const string &title;
+    const string &content;
     int contentLength;
     int contentLines;
     int startLine;
@@ -33,7 +34,7 @@ public:
 
     TextWindow &operator=(const TextWindow &) = delete;
 
-    explicit TextWindow(const TaskData &taskData);
+    explicit TextWindow(const string &title, const string &content);
 
     WINDOW *drawWindow(int rows, int cols, int x, int y);
 

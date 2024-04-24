@@ -62,30 +62,18 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
-                if (curItem > 0) menuUp();
-                if (curItem == 1) {
-                    int rows, cols;
-                    getmaxyx(parentWin, rows, cols);
-                    mvwprintw(parentWin, rows - 2, 3, "Press 'r' to read the task and 'o' to open it in nvim");
-                    continue;
-                }
+                if (curItem > 0) menuUp(2, 5);
                 return static_cast<int>(menuCodes::refreshWin);
             }
 
             case 'j' : {
-                if (curItem < menuSize - 1) menuDown();
-                if (curItem == 1) {
-                    int rows, cols;
-                    getmaxyx(parentWin, rows, cols);
-                    mvwprintw(parentWin, rows - 2, 3, "Press 'r' to read the task and 'o' to open it in nvim");
-                    continue;
-                }
+                if (curItem < menuSize - 1) menuDown(2, 5);
                 return static_cast<int>(menuCodes::refreshWin);
             }
 
             case 'r' : {
                 if (curItem == 1) {
-                    TextWindow dailyTaskTextWindow(task->getDailyTask());
+                    TextWindow dailyTaskTextWindow(task->getDailyTask().title, task->getDailyTask().content);
                     int rows, cols;
                     getmaxyx(stdscr, rows, cols);
                     WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
@@ -96,22 +84,41 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     return static_cast<int>(menuCodes::refreshWin);
                 }
             }
-            break;
+                break;
 
             case 'o' : {
                 if (curItem == 1) {
-//                    std::ofstream myFileInput;
-//                    myFileInput.open("dailyTask.cpp");
-//                    myFileInput << "/*" << task->getDailyTask().content << "*/" << "\n\n"
-//                                << task->getCodeSnippet(task->getDailyTask().titleSlug, "C++", task->getDailyTask());
-//                    myFileInput.close();
-//                    system("nvim dailyTask.cpp");
-//                    endwin();
-//                    initscr();
-//                    return static_cast<int>(menuCodes::refreshWin);
+                    if (refreshCodeSnippetStatus) {
+                        std::ofstream myFileInput;
+
+                        string codeSnippet;
+                        for (const auto &item: task->getDailyTask().codeSnippets) {
+                            if (item["langSlug"] == "cpp") {
+                                codeSnippet = item["code"];
+                                break;
+                            }
+                        }
+
+                        myFileInput.open("dailyTask.cpp");
+                        myFileInput << codeSnippet;
+                        myFileInput.close();
+                        refreshCodeSnippetStatus = false;
+                    }
+                    system("nvim dailyTask.cpp");
+                    endwin();
+                    initscr();
+                    return static_cast<int>(menuCodes::refreshWin);
                 }
             }
-            break;
+                break;
+
+            case 'c' : {
+                if (curItem == 1) {
+                    refreshCodeSnippetStatus = true;
+                    return static_cast<int>(menuCodes::refreshWin);
+                }
+            }
+                break;
 
             case 10 : {
                 if (curItem == 0) {
@@ -120,14 +127,37 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     initscr();
                     return static_cast<int>(menuCodes::refreshWin);
                 }
+
+                if (curItem == 1 && !refreshCodeSnippetStatus) {
+                    LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
+                    int rows, cols;
+                    getmaxyx(stdscr, rows, cols);
+                    WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, rows / 2, cols / 2 + 18);
+                    wrefresh(launchMenuWin);
+
+                    while (true) {
+                        int curCode = launchMenuWindow.handleKeyEvent(task);
+                        if (curCode == static_cast<int>(menuCodes::quit)) break;
+                        if (curCode == static_cast<int>(menuCodes::ok))
+                            wrefresh(launchMenuWin);
+                    }
+
+                    return static_cast<int>(menuCodes::refreshWin);
+                }
             }
-            break;
+                break;
 
             case 'q' :
                 return static_cast<int>(menuCodes::quit);
-        }
 
+            default:
+                return static_cast<int>(menuCodes::ok);
+        }
     }
 
-    return 0;
+    return static_cast<int>(menuCodes::ok);
+}
+
+bool MainMenuWindow::getRefreshCodeSnippetStatus() const {
+    return refreshCodeSnippetStatus;
 }

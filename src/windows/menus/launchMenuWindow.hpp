@@ -1,12 +1,11 @@
 #pragma once
 
 #include "menuWindow.hpp"
-#include "textWindow.hpp"
-#include "../helpers/task.hpp"
+#include "../textWindow.hpp"
 
-class MainMenuWindow : public MenuWindow {
+class LaunchMenuWindow : public MenuWindow {
 public:
-    explicit MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
+    explicit LaunchMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
     WINDOW *drawWindow(int row, int col, int x, int y) override;
 

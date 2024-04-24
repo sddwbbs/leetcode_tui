@@ -1,7 +1,7 @@
 #pragma once
 
 #include "windows/mainWindow.hpp"
-#include "windows/menuWindow.hpp"
+#include "windows/menus/menuWindow.hpp"
 #include "windows/textWindow.hpp"
 #include "helpers/task.hpp"
 

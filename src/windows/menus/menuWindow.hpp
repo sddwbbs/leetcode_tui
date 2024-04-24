@@ -5,7 +5,7 @@
 #include <pqxx/pqxx>
 #include <string>
 
-#include "../helpers/task.hpp"
+#include "../../helpers/task.hpp"
 
 using std::vector;
 using std::string;
@@ -24,9 +24,9 @@ protected:
     int curItem = 0;
     int menuSize = 0;
 
-    void menuUp();
+    void menuUp(int rowsPadding, int colsPadding);
 
-    void menuDown();
+    void menuDown(int rowsPadding, int colsPadding);
 
 public:
     MenuWindow(const MenuWindow &) = delete;
