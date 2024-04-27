@@ -4,10 +4,11 @@
 #include <nlohmann/json.hpp>
 #include <pqxx/pqxx>
 #include <gumbo.h>
+#include <fstream>
 #include <iostream>
 
 #include "requests/dailyTaskRequest.hpp"
-#include "requests/codeSnippetRequest.hpp"
+#include "requests/runCodeRequests.hpp"
 
 using std::string;
 using json = nlohmann::json;
@@ -48,7 +49,7 @@ public:
 
     TaskData &getSingleTask();
 
-    string runCode();
+    [[nodiscard]] string runCode() const;
 
     string submitCode();
 };

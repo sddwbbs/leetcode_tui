@@ -160,10 +160,14 @@ TaskData &Task::getSingleTask() {
     return singleTask;
 }
 
-string Task::runCode() {
-    //string getTestcases
-    //string run
-    //string check
+string Task::runCode() const {
+    std::ifstream myFileInput("dailyTask.cpp");
+    string typedCode;
+
+    if (myFileInput.is_open())
+        while (std::getline(myFileInput, typedCode));
+
+    return RunCodeRequests::getResult(singleTask.id, singleTask.titleSlug, typedCode);
 }
 
 string Task::submitCode() {

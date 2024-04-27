@@ -7,12 +7,7 @@ using json = nlohmann::json;
 using std::string;
 
 class RunCodeRequests {
-    string getTestCases(const string &titleSlug);
-
-    string run(const string &titleSlug, const string &testCases);
-
-    string check(const string &runcodeId);
 
 public:
-    static string getResult();
+    static string getResult(int questionId, const string &titleSlug, const string &typedCode);
 };
