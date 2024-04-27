@@ -19,11 +19,12 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
 
     contentLength = static_cast<int>(content.length());
 
-    for (int i = 0, startOfLine = 0; i < contentLength; ++i) {
-        if (content[i] == '\n' || i - startOfLine == cols - 4) {
+    int limit = cols - 4;
+    for (int i = 0; i < contentLength; ++i) {
+        if (content[i] == '\n' || i - limit == 0) {
             ++contentLines;
+            if (i - limit == 0) limit += cols - 4;
             while (content[i] == '\n' || content[i] == ' ') ++i;
-            startOfLine = i;
         }
     }
 
@@ -123,6 +124,8 @@ void TextWindow::printWindowContent() const {
             startOfLine = i;
         }
     }
+
+    string hello = "hfalf";
 }
 
 void TextWindow::clearWindowContent() const {
