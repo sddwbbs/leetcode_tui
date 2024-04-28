@@ -17,7 +17,7 @@ void App::startApp() {
 
         WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
         MainMenuWindow mainMenuWindow(stdscr, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  "});
-        WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15);
+        WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
 
         wrefresh(mainWin);
         wrefresh(mainMenuWin);
@@ -31,7 +31,7 @@ void App::startApp() {
             if (curCode == static_cast<int>(menuCodes::quit)) break;
             if (curCode == static_cast<int>(menuCodes::refreshWin)) {
                 MainWindow::refreshWindow(rows, cols, 0, 0);
-                mainMenuWindow.refreshWindow(8, 30, rows / 2 - 4, cols / 2 - 15);
+                mainMenuWindow.refreshWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
                 wattron(mainWin, COLOR_PAIR(2));
                 if (mainMenuWindow.getCurItem() == 1) {
                     mvwprintw(mainWin, rows - 2, 3,

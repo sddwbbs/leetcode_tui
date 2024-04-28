@@ -31,17 +31,17 @@ protected:
 public:
     MenuWindow(const MenuWindow &) = delete;
 
-    MenuWindow() = delete;
+    MenuWindow() = default;
 
     MenuWindow &operator=(const MenuWindow &) = delete;
 
     explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    virtual WINDOW *drawWindow(int row, int col, int x, int y) = 0;
+    WINDOW *drawWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding);
 
-    virtual void refreshWindow(int row, int col, int x, int y) = 0;
+    void refreshWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding);
 
-    const char *getMenuItem(int index);
+    [[nodiscard]] const char *getMenuItem(int index) const;
 
     [[nodiscard]] int getCurItem() const;
 

@@ -4,6 +4,7 @@
 #include "../textWindow.hpp"
 #include "../../helpers/task.hpp"
 #include "launchMenuWindow.hpp"
+#include "languageMenuWindow.hpp"
 
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -15,10 +16,6 @@ class MainMenuWindow : public MenuWindow {
 
 public:
     explicit MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
-
-    WINDOW *drawWindow(int row, int col, int x, int y) override;
-
-    void refreshWindow(int row, int col, int x, int y) override;
 
     int handleKeyEvent(Task *task) override;
 
