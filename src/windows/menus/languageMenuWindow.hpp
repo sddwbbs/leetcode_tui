@@ -7,30 +7,30 @@
 using std::unordered_map;
 
 const vector<string> lang = {
-        "C++ ",
-        "Java ",
-        "Python ",
-        "Python3 ",
-        "C ",
-        "C# ",
-        "JavaScript ",
-        "TypeScript ",
-        "PHP ",
-        "Swift ",
-        "Kotlin ",
-        "Dart ",
-        "Go ",
-        "Ruby ",
-        "Scala ",
-        "Rust ",
-        "Racket ",
-        "Erlang ",
-        "Elixir "
+        "C++",
+        "Java",
+        "Python",
+        "Python3",
+        "C",
+        "C#",
+        "JavaScript",
+        "TypeScript",
+        "PHP",
+        "Swift",
+        "Kotlin",
+        "Dart",
+        "Go",
+        "Ruby",
+        "Scala",
+        "Rust",
+        "Racket",
+        "Erlang",
+        "Elixir"
 };
 
 class LanguageMenuWindow : public MenuWindow {
 public:
-    const unordered_map<string, string> langExt = {
+    const unordered_map<string, string> langExtMap = {
             { "C++", "cpp" },
             { "Java", "java" },
             { "Python", "py" },

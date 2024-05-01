@@ -13,7 +13,8 @@ using std::string;
 enum class menuCodes : int {
     ok,
     quit,
-    refreshWin
+    refreshWin,
+    itemSelected
 };
 
 class MenuWindow {

@@ -18,6 +18,7 @@ int LanguageMenuWindow::handleKeyEvent(Task *task) {
             }
 
             case 10 : {
+                return static_cast<int>(menuCodes::itemSelected);
             }
 
             case 'q' : {

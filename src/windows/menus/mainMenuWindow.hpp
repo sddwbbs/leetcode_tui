@@ -7,12 +7,16 @@
 #include "languageMenuWindow.hpp"
 
 #include <fstream>
+#include <filesystem>
 #include <nlohmann/json.hpp>
 
 using nlohmann::json;
 
+namespace fs = std::filesystem;
+
 class MainMenuWindow : public MenuWindow {
     bool refreshCodeSnippetStatus = true;
+    string langExt;
 
 public:
     explicit MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);

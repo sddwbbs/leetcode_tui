@@ -37,6 +37,8 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     if (refreshCodeSnippetStatus) {
                         std::ofstream myFileInput;
                         string selectedLang;
+                        string codeSnippet;
+                        int selectedLangIndex = -1;
 
                         LanguageMenuWindow languageMenuWindow(curWin);
                         int rows, cols;
@@ -44,31 +46,39 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                         WINDOW *languageMenuWin = languageMenuWindow.drawWindow(23, 40, rows / 2 - 11, cols / 2 - 20, 2, 5);
                         wrefresh(languageMenuWin);
 
-                        //bag when menu is closed without lang chosen
                         while (true) {
                             int curCode = languageMenuWindow.handleKeyEvent(task);
+                            if (curCode == static_cast<int>(menuCodes::itemSelected)) {
+                                selectedLangIndex = languageMenuWindow.getCurItem();
+                                break;
+                            }
                             if (curCode == static_cast<int>(menuCodes::quit)) break;
                             if (curCode == static_cast<int>(menuCodes::ok))
                                 wrefresh(languageMenuWin);
                         }
 
-                        string codeSnippet;
+                        if (selectedLangIndex == -1)
+                            return static_cast<int>(menuCodes::refreshWin);
+                        selectedLang = lang[selectedLangIndex];
+                        auto pos = languageMenuWindow.langExtMap.find(selectedLang);
+                        if (pos != languageMenuWindow.langExtMap.end())
+                            langExt = pos->second;
+
                         for (const auto &item: task->getDailyTask().codeSnippets) {
-                            if (item["langSlug"] == lang) {
+                            if (item["lang"] == selectedLang) {
                                 codeSnippet = item["code"];
                                 break;
                             }
                         }
 
-                        myFileInput.open("dailyTask.cpp");
+                        myFileInput.open("dailyTask." + langExt);
                         myFileInput << codeSnippet;
                         myFileInput.close();
                         refreshCodeSnippetStatus = false;
-
-                        return static_cast<int>(menuCodes::refreshWin);
                     }
 
-                    system("nvim dailyTask.cpp");
+                    string command = "nvim dailyTask." + langExt;
+                    system(command.c_str());
                     endwin();
                     initscr();
                     return static_cast<int>(menuCodes::refreshWin);
