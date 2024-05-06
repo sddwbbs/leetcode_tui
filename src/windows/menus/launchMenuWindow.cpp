@@ -19,12 +19,41 @@ int LaunchMenuWindow::handleKeyEvent(Task *task) {
 
             case 10 : {
                 if (curItem == 0) {
-                    string title = " Result ";
-                    string content = task->runCode();
+                    ResultData resultData = task->runCode();
+                    string title;
+                    bool isCompileError = false;
+                    string content;
+
+                    if (resultData.statusMessage == "Accepted") {
+                        if (resultData.totalTestCases != resultData.totalCorrect) {
+                            title = " Wrong answer ";
+                            content += "Output: \n";
+                            for (auto &elem : resultData.codeAnswer) {
+                                content += elem + '\n';
+                            }
+                            content += "\nExpected: \n";
+                            for (auto &elem : resultData.expectedCodeAnswer) {
+                                content += elem + '\n';
+                            }
+                        } else {
+                            title = " Accepted ";
+                            content = "Time: " + resultData.statusRuntime + '\n' + "Memory: " + resultData.statusMemory + '\n';
+                        }
+                    } else {
+                        title = "Compile error";
+                        isCompileError = true;
+                        content = resultData.fullCompileError;
+                    }
+
                     TextWindow resultTextWindow(title, content);
                     int rows, cols;
                     getmaxyx(stdscr, rows, cols);
-                    WINDOW *dailyTaskTextWin = resultTextWindow.drawWindow(16, 40, rows / 2 - 8, cols / 2 - 20);
+
+                    WINDOW *dailyTaskTextWin = nullptr;
+                    if (!isCompileError)
+                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 40, rows / 2 - 8, cols / 2 - 20);
+                    else
+                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 80, rows / 2 - 8, cols / 2 - 40);
                     wrefresh(dailyTaskTextWin);
 
                     resultTextWindow.handleKeyEvent();

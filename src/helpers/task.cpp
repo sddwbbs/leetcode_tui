@@ -160,14 +160,33 @@ TaskData &Task::getSingleTask() {
     return singleTask;
 }
 
-string Task::runCode() const {
+ResultData &Task::runCode() {
     std::ifstream myFileInput("dailyTask.cpp");
+    std::stringstream ss;
     string typedCode;
 
-    if (myFileInput.is_open())
-        while (std::getline(myFileInput, typedCode));
+    if (myFileInput.is_open()) {
+        ss << myFileInput.rdbuf();
+        typedCode = ss.str();
+        myFileInput.close();
+    }
 
-    return RunCodeRequests::getResult(singleTask.id, singleTask.titleSlug, typedCode);
+    json response = RunCodeRequests::getResult(singleTask.id, singleTask.titleSlug, typedCode);
+
+    resultData.statusMessage = response["status_msg"];
+    if (resultData.statusMessage == "Accepted") {
+        resultData.totalTestCases = response["total_testcases"];
+        resultData.totalCorrect = response["total_correct"];
+        resultData.statusMemory = response["status_memory"];
+        resultData.statusRuntime = response["status_runtime"];
+        resultData.codeAnswer = response["code_answer"];
+        resultData.expectedCodeAnswer = response["expected_code_answer"];
+    } else {
+        resultData.statusMessage = response["status_msg"];
+        resultData.fullCompileError = response["full_compile_error"];
+    }
+
+    return resultData;
 }
 
 string Task::submitCode() {

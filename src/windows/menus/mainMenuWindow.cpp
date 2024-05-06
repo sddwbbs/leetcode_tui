@@ -22,7 +22,8 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     TextWindow dailyTaskTextWindow(task->getDailyTask().title, task->getDailyTask().content);
                     int rows, cols;
                     getmaxyx(stdscr, rows, cols);
-                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
+//                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
+                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2  + rows / 4, cols / 2, rows / 6, cols / 2 - (cols / 4));
                     wrefresh(dailyTaskTextWin);
 
                     dailyTaskTextWindow.handleKeyEvent();
@@ -35,7 +36,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
             case 'o' : {
                 if (curItem == 1) {
                     if (refreshCodeSnippetStatus) {
-                        std::ofstream myFileInput;
+                        std::ofstream myFileOutput;
                         string selectedLang;
                         string codeSnippet;
                         int selectedLangIndex = -1;
@@ -71,9 +72,9 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                             }
                         }
 
-                        myFileInput.open("dailyTask." + langExt);
-                        myFileInput << codeSnippet;
-                        myFileInput.close();
+                        myFileOutput.open("dailyTask." + langExt);
+                        myFileOutput << codeSnippet;
+                        myFileOutput.close();
                         refreshCodeSnippetStatus = false;
                     }
 

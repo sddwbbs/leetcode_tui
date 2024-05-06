@@ -2,8 +2,7 @@
 
 #include "runCodeRequests.hpp"
 
-string RunCodeRequests::getResult(const int questionId, const string &titleSlug, const string &typedCode) {
-    string result;
+json RunCodeRequests::getResult(const int questionId, const string &titleSlug, const string &typedCode) {
     string testCases;
     string runcodeId;
     string lang = "cpp";
@@ -75,8 +74,6 @@ string RunCodeRequests::getResult(const int questionId, const string &titleSlug,
         usleep(100);
     }
 
-    result = jsonResponse["status_msg"];
-
-    return result;
+    return jsonResponse;
 }
 

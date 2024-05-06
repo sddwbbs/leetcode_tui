@@ -9,5 +9,5 @@ using std::string;
 class RunCodeRequests {
 
 public:
-    static string getResult(int questionId, const string &titleSlug, const string &typedCode);
+    static json getResult(int questionId, const string &titleSlug, const string &typedCode);
 };

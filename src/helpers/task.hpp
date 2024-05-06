@@ -5,6 +5,7 @@
 #include <pqxx/pqxx>
 #include <gumbo.h>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 
 #include "requests/dailyTaskRequest.hpp"
@@ -12,6 +13,7 @@
 
 using std::string;
 using json = nlohmann::json;
+using std::vector;
 
 struct TaskData {
     int id;
@@ -25,10 +27,23 @@ struct TaskData {
     bool paidOnly;
 };
 
+struct ResultData {
+    int totalTestCases;
+    int totalCorrect;
+    vector<string> codeAnswer;
+    vector<string> expectedCodeAnswer;
+    string statusMessage;
+    string fullCompileError;
+    string statusMemory;
+    string statusRuntime;
+};
+
 class Task {
     pqxx::connection &conn;
 
     TaskData singleTask;
+
+    ResultData resultData;
 
     void extractText(GumboNode* node, string& plainText);
 
@@ -49,7 +64,7 @@ public:
 
     TaskData &getSingleTask();
 
-    [[nodiscard]] string runCode() const;
+    [[nodiscard]] ResultData &runCode();
 
     string submitCode();
 };
