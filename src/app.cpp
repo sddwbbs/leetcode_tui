@@ -8,6 +8,8 @@
 void App::startApp() {
     initscr();
     start_color();
+    cbreak();
+    noecho();
 
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -16,7 +18,7 @@ void App::startApp() {
         pqxx::connection conn("dbname=leetcode_tui user=postgres password=8080 hostaddr=127.0.0.1 port=5432");
 
         WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
-        MainMenuWindow mainMenuWindow(stdscr, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  "});
+        MainMenuWindow mainMenuWindow(mainWin, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  ", "Search           "});
         WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
 
         wrefresh(mainWin);

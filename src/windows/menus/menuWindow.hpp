@@ -14,7 +14,7 @@ enum class menuCodes : int {
     ok,
     quit,
     refreshWin,
-    itemSelected
+    itemSelected,
 };
 
 class MenuWindow {
@@ -48,5 +48,5 @@ public:
 
     [[nodiscard]] int getMenuSize() const;
 
-    virtual int handleKeyEvent(Task *task) = 0;
+    virtual int handleKeyEvent();
 };

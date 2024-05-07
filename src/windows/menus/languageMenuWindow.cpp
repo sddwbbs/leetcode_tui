@@ -3,7 +3,7 @@
 LanguageMenuWindow::LanguageMenuWindow(WINDOW *parentWin)
         : MenuWindow(parentWin, lang) {}
 
-int LanguageMenuWindow::handleKeyEvent(Task *task) {
+int LanguageMenuWindow::handleKeyEvent() {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {

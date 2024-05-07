@@ -78,3 +78,7 @@ void MenuWindow::menuDown(int rowsPadding, int colsPadding) {
 
     wrefresh(curWin);
 }
+
+int MenuWindow::handleKeyEvent() {
+    return static_cast<int>(menuCodes::ok);
+}

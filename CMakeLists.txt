@@ -31,6 +31,10 @@ add_executable(leetcode_tui src/main.cpp
         src/windows/menus/launchMenuWindow.hpp
         src/helpers/requests/runCodeRequests.cpp
         src/helpers/requests/runCodeRequests.hpp
+        src/windows/searchBarWindow.cpp
+        src/windows/searchBarWindow.hpp
+        src/windows/menus/searchResultsMenu.cpp
+        src/windows/menus/searchResultsMenu.hpp
 )
 
 target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq gumbo)

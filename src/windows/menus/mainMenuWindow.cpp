@@ -1,7 +1,9 @@
 #include "mainMenuWindow.hpp"
 
 MainMenuWindow::MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
-        : MenuWindow(parentWin, menuItems) {}
+        : MenuWindow(parentWin, menuItems) {
+    getmaxyx(parentWin, rows, cols);
+}
 
 int MainMenuWindow::handleKeyEvent(Task *task) {
     int ch;
@@ -20,10 +22,8 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
             case 'r' : {
                 if (curItem == 1) {
                     TextWindow dailyTaskTextWindow(task->getDailyTask().title, task->getDailyTask().content);
-                    int rows, cols;
-                    getmaxyx(stdscr, rows, cols);
-//                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
-                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2  + rows / 4, cols / 2, rows / 6, cols / 2 - (cols / 4));
+                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
+                                                                              cols / 2 - (cols / 4));
                     wrefresh(dailyTaskTextWin);
 
                     dailyTaskTextWindow.handleKeyEvent();
@@ -42,13 +42,12 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                         int selectedLangIndex = -1;
 
                         LanguageMenuWindow languageMenuWindow(curWin);
-                        int rows, cols;
-                        getmaxyx(stdscr, rows, cols);
-                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(23, 40, rows / 2 - 11, cols / 2 - 20, 2, 5);
+                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(23, 40, rows / 2 - 11, cols / 2 - 20, 2,
+                                                                                5);
                         wrefresh(languageMenuWin);
 
                         while (true) {
-                            int curCode = languageMenuWindow.handleKeyEvent(task);
+                            int curCode = languageMenuWindow.handleKeyEvent();
                             if (curCode == static_cast<int>(menuCodes::itemSelected)) {
                                 selectedLangIndex = languageMenuWindow.getCurItem();
                                 break;
@@ -105,8 +104,6 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
 
                 if (curItem == 1 && !refreshCodeSnippetStatus) {
                     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
-                    int rows, cols;
-                    getmaxyx(stdscr, rows, cols);
                     WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, rows / 2, cols / 2 + 18, 1, 1);
                     wrefresh(launchMenuWin);
 
@@ -116,6 +113,26 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                         if (curCode == static_cast<int>(menuCodes::ok))
                             wrefresh(launchMenuWin);
                     }
+
+                    return static_cast<int>(menuCodes::refreshWin);
+                }
+
+                if (curItem == 3) {
+                    MainWindow::clearWindowContent();
+                    wrefresh(parentWin);
+
+                    SearchBarWindow searchBarWindow;
+                    WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4, 2, cols / 8);
+                    wrefresh(searchBarWin);
+
+                    SearchResultsMenu searchResultsMenu;
+                    WINDOW *searchResultMenuWin = searchResultsMenu.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4, 5, cols / 8, 4, 4);
+                    wrefresh(searchResultMenuWin);
+
+                    curs_set(1);
+                    wmove(stdscr, 3, cols / 8 + 2);
+                    searchBarWindow.handleKeyEvent();
+                    curs_set(0);
 
                     return static_cast<int>(menuCodes::refreshWin);
                 }
