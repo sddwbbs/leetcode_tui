@@ -4,7 +4,18 @@ SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin, const vector
         : MenuWindow(parentWin, menuItems) {}
 
 vector<string> SearchResultsMenuWindow::searchTasks() {
-    return {"first item", "second item", "another item"};
+    vector<json> questionList = QuestionListRequest::getQuestionList(searchText);
+    vector<string> items(10);
+
+    int i = 0;
+    for (const auto& question : questionList) {
+        if (i < 10)
+            items[i] = question["title"];
+        else break;
+        ++i;
+    }
+
+    return items;
 }
 
 int SearchResultsMenuWindow::handleKeyEvent(string *_searchText) {

@@ -129,17 +129,21 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4, 5, cols / 8, 4, 4);
                     wrefresh(searchResultMenuWin);
 
-                    curs_set(1);
-                    wmove(stdscr, 3, cols / 8 + 2);
-                    string searchText = searchBarWindow.handleKeyEvent();
-                    curs_set(0);
-                    if (!searchText.empty())
-                        while (true) {
-                            int curCode = searchResultsMenuWindow.handleKeyEvent(&searchText);
-                            if (curCode == static_cast<int>(menuCodes::quit)) break;
-                            if (curCode == static_cast<int>(menuCodes::ok))
-                                wrefresh(searchResultMenuWin);
-                        }
+                    int cursorOffset = cols / 8 + 2;
+                    char key;
+                    while ((key = getch()) != 'q') {
+                        curs_set(1);
+                        wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
+                        string searchText = searchBarWindow.handleKeyEvent();
+                        curs_set(0);
+                        if (!searchText.empty())
+                            while (true) {
+                                int curCode = searchResultsMenuWindow.handleKeyEvent(&searchText);
+                                if (curCode == static_cast<int>(menuCodes::quit)) break;
+                                if (curCode == static_cast<int>(menuCodes::ok))
+                                    wrefresh(searchResultMenuWin);
+                            }
+                    }
 
                     return static_cast<int>(menuCodes::refreshWin);
                 }
