@@ -7,7 +7,7 @@
 #include "launchMenuWindow.hpp"
 #include "languageMenuWindow.hpp"
 #include "../searchBarWindow.hpp"
-#include "searchResultsMenu.hpp"
+#include "searchResultsMenuWindow.hpp"
 
 #include <fstream>
 #include <filesystem>

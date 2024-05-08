@@ -18,7 +18,7 @@ WINDOW *MainWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     refresh();
 
     wattron(curWin, COLOR_PAIR(1));
-    mvwprintw(curWin, 1, 10, "\n"
+    mvwprintw(curWin, 1, 0, "\n"
                              "                         $$\\                           $$\\      $$$$$$\\                  $$\\           \n"
                              "                         $$ |                          $$ |    $$  __$$\\                 $$ |          \n"
                              "                         $$ |      $$$$$$\\   $$$$$$\\ $$$$$$\\   $$ /  \\__| $$$$$$\\   $$$$$$$ | $$$$$$\\  \n"
@@ -52,7 +52,7 @@ void MainWindow::refreshWindow(int _rows, int _cols, int _x, int _y) {
     werase(curWin);
 
     wattron(curWin, COLOR_PAIR(1));
-    mvwprintw(curWin, 1, 10, "\n"
+    mvwprintw(curWin, 1, 0, "\n"
                              "                         $$\\                           $$\\      $$$$$$\\                  $$\\           \n"
                              "                         $$ |                          $$ |    $$  __$$\\                 $$ |          \n"
                              "                         $$ |      $$$$$$\\   $$$$$$\\ $$$$$$\\   $$ /  \\__| $$$$$$\\   $$$$$$$ | $$$$$$\\  \n"

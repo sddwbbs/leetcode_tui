@@ -5,13 +5,15 @@ MenuWindow::MenuWindow(WINDOW* parentWin, const vector<string> &menuItems)
     , menuItems(menuItems)
     , menuSize(static_cast<int>(menuItems.size())) {}
 
-WINDOW *MenuWindow::drawWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding) {
+WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
     if (curWin != nullptr) return curWin;
+    rows = _rows, cols = _cols, x = _x, y = _y;
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     init_pair(5, COLOR_BLACK, COLOR_CYAN);
 
-    curWin = newwin(row, col, x, y);
+    curWin = newwin(rows, cols, x, y);
     refresh();
 
     wattron(curWin, COLOR_PAIR(4));
@@ -31,8 +33,10 @@ WINDOW *MenuWindow::drawWindow(int row, int col, int x, int y, int rowsPadding, 
     return curWin;
 }
 
-void MenuWindow::refreshWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding) {
-    wresize(curWin, row, col);
+void MenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+    rows = _rows, cols = _cols, x = _x, y = _y;
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
+    wresize(curWin, rows, cols);
     mvwin(curWin, x, y);
     werase(curWin);
 
@@ -59,7 +63,8 @@ int MenuWindow::getCurItem() const { return curItem; }
 
 int MenuWindow::getMenuSize() const { return menuSize; }
 
-void MenuWindow::menuUp(int rowsPadding, int colsPadding) {
+void MenuWindow::menuUp(int _rowsPadding, int _colsPadding) {
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     mvwprintw(curWin, curItem + rowsPadding, colsPadding, "%s", menuItems[curItem].c_str());
     --curItem;
     wattron(curWin, COLOR_PAIR(5));
@@ -69,7 +74,8 @@ void MenuWindow::menuUp(int rowsPadding, int colsPadding) {
     wrefresh(curWin);
 }
 
-void MenuWindow::menuDown(int rowsPadding, int colsPadding) {
+void MenuWindow::menuDown(int _rowsPadding, int _colsPadding) {
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     mvwprintw(curWin, curItem + rowsPadding, colsPadding, "%s", menuItems[curItem].c_str());
     ++curItem;
     wattron(curWin, COLOR_PAIR(5));

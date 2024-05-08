@@ -1,6 +1,6 @@
 #pragma once
 
-#include "menus/searchResultsMenu.hpp"
+#include "menus/searchResultsMenuWindow.hpp"
 
 #include <ncurses.h>
 #include <string>
@@ -10,6 +10,7 @@ using std::string;
 class SearchBarWindow {
     WINDOW *curWin = nullptr;
     string searchText;
+    string emptyStr;
     int rows = 0;
     int cols = 0;
     int x = 0;
@@ -26,7 +27,7 @@ public:
 
     void refreshWindow(int rows, int cols, int x, int y);
 
-    void handleKeyEvent();
+    string &handleKeyEvent();
 
     [[nodiscard]] string getSearchText() const;
 };
