@@ -6,8 +6,9 @@
 #include <string>
 
 enum class searchBarCodes : int {
+    ok,
     quit,
-    textTyped
+    textTyped,
 };
 
 using std::string;
@@ -15,6 +16,7 @@ using std::string;
 class SearchBarWindow {
     WINDOW *curWin = nullptr;
     string searchText;
+    string prevSearchText;
     string emptyStr;
     int rows = 0;
     int cols = 0;

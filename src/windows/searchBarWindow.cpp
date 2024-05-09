@@ -34,6 +34,9 @@ searchBarCodes SearchBarWindow::handleKeyEvent() {
     while ((ch = getch()) != 27) {
         switch (ch) {
             case '\n' : {
+                if (prevSearchText == searchText)
+                    return searchBarCodes::ok;
+                prevSearchText = searchText;
                 return searchBarCodes::textTyped;
             }
 

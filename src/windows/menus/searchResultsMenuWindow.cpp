@@ -13,20 +13,127 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
 
     int i = 0;
     for (const auto& question : questionList) {
-        if (i < 10) {
-            string questionStr = question["frontendQuestionId"].dump() + question["title"].dump() + question["difficulty"].dump();
+        if (i < 20) {
+            string frontendId = question["frontendQuestionId"];
+            string title = question["title"];
+            string difficulty = question["difficulty"];
+            string status;
+            if (!question["status"].is_null()) {
+                if (question["status"] == "ac") status = "Solved";
+                if (question["status"] == "notac") status = "Attempted";
+            }
+
+            string paidOnly;
+            if (question["paidOnly"] == true)
+                paidOnly = "x";
+
+            stringstream ss;
+            ss << std::setw(idWidth) << std::left << frontendId << " "
+            << std::setw(titleWidth) << std::left << title << " "
+            << std::setw(difficultyWidth) << difficulty << " "
+            << std::setw(statusWidth) << status << " "
+            << std::setw(paidOnlyWidth) << paidOnly;
+            string questionStr = ss.str();
             items.push_back(questionStr);
-        }
-        else break;
+        } else break;
         ++i;
     }
 
     return items;
 }
 
+WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+    if (curWin != nullptr) return curWin;
+    rows = _rows, cols = _cols, x = _x, y = _y;
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_CYAN, COLOR_BLACK);
+    init_pair(5, COLOR_BLACK, COLOR_CYAN);
+
+    curWin = newwin(rows, cols, x, y);
+    refresh();
+
+    wattron(curWin, COLOR_PAIR(4));
+    box(curWin, ACS_VLINE, ACS_HLINE);
+    wattroff(curWin, COLOR_PAIR(4));
+
+    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s%s%-*s",
+              idWidth, "ID",
+              " ",
+              titleWidth, "TITLE",
+              " ",
+              difficultyWidth, "DIFFICULTY",
+              " ",
+              statusWidth, "STATUS",
+              " ",
+              paidOnlyWidth, "PAID ONLY");
+
+    mvwhline(curWin, 2, colsPadding, ACS_HLINE, cols - 2 * colsPadding);
+
+    for (int i = 0; i < menuSize; ++i) {
+        if (i == curItem) {
+            wattron(curWin, COLOR_PAIR(5));
+            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            wattroff(curWin, COLOR_PAIR(5));
+        } else {
+            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+        }
+    }
+
+    mvwvline(curWin, 1, idWidth + 1, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + 2, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + 3, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
+
+    return curWin;
+}
+
+void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+    rows = _rows, cols = _cols, x = _x, y = _y;
+    rowsPadding = _rowsPadding, colsPadding = _colsPadding;
+    wresize(curWin, rows, cols);
+    mvwin(curWin, x, y);
+    werase(curWin);
+
+    wattron(curWin, COLOR_PAIR(4));
+    box(curWin, 0, 0);
+    wattroff(curWin, COLOR_PAIR(4));
+
+    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s%s%-*s",
+              idWidth, "ID",
+              " ",
+              titleWidth, "TITLE",
+              " ",
+              difficultyWidth, "DIFFICULTY",
+              " ",
+              statusWidth, "STATUS",
+              " ",
+              paidOnlyWidth, "PAID ONLY");
+
+    mvwhline(curWin, 2, colsPadding, ACS_HLINE, cols - 2 * colsPadding);
+
+    for (int i = 0; i < menuSize; ++i) {
+        if (i == curItem) {
+            wattron(curWin, COLOR_PAIR(5));
+            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            wattroff(curWin, COLOR_PAIR(5));
+        } else {
+            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+        }
+    }
+
+    mvwvline(curWin, 1, idWidth + 1, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + 2, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + 3, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
+
+    wrefresh(curWin);
+}
+
 menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText) {
     if (isRequestRequired) {
         menuItems = searchTasks(searchText);
+        curItem = 0;
         if (menuItems.empty()) {
             menuSize = 0;
             wclear(curWin);
@@ -37,32 +144,41 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
         }
         menuSize = menuItems.size();
         refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
-        wrefresh(curWin);
     }
-    char ch;
 
+    int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
-            case 'k' : {
-                if (curItem > 0) menuUp(4, 4);
-                return menuCodes::ok;
+            case 'k': {
+                if (curItem > 0) {
+                    menuUp(rowsPadding, colsPadding);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+                }
+                break;
             }
 
-            case 'j' : {
-                if (curItem < menuSize - 1) menuDown(4, 4);
-                return menuCodes::ok;
+            case 'j': {
+                if (curItem < menuSize - 1) {
+                    menuDown(rowsPadding, colsPadding);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+                }
+                break;
             }
 
-            case '\n' : {
-                //what happens if user select task
+            case '\n': {
+                // Handle selection, for example:
+                mvwprintw(curWin, menuSize + 2, 4, "Selected: %s", menuItems[curItem].c_str());
+                wrefresh(curWin);
+                // Return a code or perform an action based on the selection
+                break;
             }
 
-            case 'q' : {
+            case 'q': {
                 return menuCodes::quit;
             }
 
             default:
-                return menuCodes::ok;
+                break;
         }
     }
 

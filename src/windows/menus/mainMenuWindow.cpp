@@ -122,22 +122,26 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     wrefresh(parentWin);
 
                     SearchBarWindow searchBarWindow;
-                    WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4, 2, cols / 8);
+                    WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4 + cols / 8, 2, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2);
                     wrefresh(searchBarWin);
 
                     SearchResultsMenuWindow searchResultsMenuWindow(curWin);
-                    WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4, 5, cols / 8, 4, 4);
+                    WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4 + cols / 8, 5, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2, 2, 2);
                     wrefresh(searchResultMenuWin);
 
-                    int cursorOffset = cols / 8 + 2;
+                    int cursorOffset = (cols - (cols / 2 + cols / 4 + cols / 8)) / 2 + 2;
                     while (true) {
                         curs_set(1);
                         wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
                         searchBarCodes curSbCode = searchBarWindow.handleKeyEvent();
                         curs_set(0);
+
                         if (curSbCode == searchBarCodes::quit) break;
                         string searchText;
                         bool isRequestRequired = true;
+
+                        if (curSbCode == searchBarCodes::ok)
+                            isRequestRequired = false;
 
                         if (curSbCode == searchBarCodes::textTyped) {
                             isRequestRequired = true;
