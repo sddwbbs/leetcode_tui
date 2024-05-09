@@ -29,9 +29,9 @@ void App::startApp() {
 
         Task *task = new Task(conn);
         while (true) {
-            int curCode = mainMenuWindow.handleKeyEvent(task);
-            if (curCode == static_cast<int>(menuCodes::quit)) break;
-            if (curCode == static_cast<int>(menuCodes::refreshWin)) {
+            menuCodes curCode = mainMenuWindow.handleKeyEvent(task);
+            if (curCode == menuCodes::quit) break;
+            if (curCode == menuCodes::refreshWin) {
                 MainWindow::refreshWindow(rows, cols, 0, 0);
                 mainMenuWindow.refreshWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
                 wattron(mainWin, COLOR_PAIR(2));

@@ -5,6 +5,9 @@ MenuWindow::MenuWindow(WINDOW* parentWin, const vector<string> &menuItems)
     , menuItems(menuItems)
     , menuSize(static_cast<int>(menuItems.size())) {}
 
+MenuWindow::MenuWindow(WINDOW *parentWin)
+    : parentWin(parentWin) {}
+
 WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols, x = _x, y = _y;
@@ -85,6 +88,6 @@ void MenuWindow::menuDown(int _rowsPadding, int _colsPadding) {
     wrefresh(curWin);
 }
 
-int MenuWindow::handleKeyEvent() {
-    return static_cast<int>(menuCodes::ok);
+menuCodes MenuWindow::handleKeyEvent() {
+    return menuCodes::ok;
 }

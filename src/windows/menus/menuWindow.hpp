@@ -7,15 +7,15 @@
 
 #include "../../helpers/task.hpp"
 
-using std::vector;
-using std::string;
-
 enum class menuCodes : int {
     ok,
     quit,
     refreshWin,
     itemSelected,
 };
+
+using std::vector;
+using std::string;
 
 class MenuWindow {
 protected:
@@ -44,9 +44,11 @@ public:
 
     explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    WINDOW *drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
+    explicit MenuWindow(WINDOW *parentWin);
 
-    void refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
+    virtual WINDOW *drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
+
+    virtual void refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
 
     [[nodiscard]] const char *getMenuItem(int index) const;
 
@@ -54,5 +56,5 @@ public:
 
     [[nodiscard]] int getMenuSize() const;
 
-    virtual int handleKeyEvent();
+    virtual menuCodes handleKeyEvent();
 };

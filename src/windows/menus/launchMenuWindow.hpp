@@ -7,5 +7,5 @@ class LaunchMenuWindow : public MenuWindow {
 public:
     explicit LaunchMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    int handleKeyEvent(Task *task);
+    menuCodes handleKeyEvent(Task *task);
 };

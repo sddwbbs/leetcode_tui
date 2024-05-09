@@ -5,18 +5,18 @@ MainMenuWindow::MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItem
     getmaxyx(parentWin, rows, cols);
 }
 
-int MainMenuWindow::handleKeyEvent(Task *task) {
+menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
                 if (curItem > 0) menuUp(2, 5);
-                return static_cast<int>(menuCodes::refreshWin);
+                return menuCodes::refreshWin;
             }
 
             case 'j' : {
                 if (curItem < menuSize - 1) menuDown(2, 5);
-                return static_cast<int>(menuCodes::refreshWin);
+                return menuCodes::refreshWin;
             }
 
             case 'r' : {
@@ -28,7 +28,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
 
                     dailyTaskTextWindow.handleKeyEvent();
 
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -47,18 +47,18 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                         wrefresh(languageMenuWin);
 
                         while (true) {
-                            int curCode = languageMenuWindow.handleKeyEvent();
-                            if (curCode == static_cast<int>(menuCodes::itemSelected)) {
+                            menuCodes curCode = languageMenuWindow.handleKeyEvent();
+                            if (curCode == menuCodes::itemSelected) {
                                 selectedLangIndex = languageMenuWindow.getCurItem();
                                 break;
                             }
-                            if (curCode == static_cast<int>(menuCodes::quit)) break;
-                            if (curCode == static_cast<int>(menuCodes::ok))
+                            if (curCode == menuCodes::quit) break;
+                            if (curCode == menuCodes::ok)
                                 wrefresh(languageMenuWin);
                         }
 
                         if (selectedLangIndex == -1)
-                            return static_cast<int>(menuCodes::refreshWin);
+                            return menuCodes::refreshWin;
                         selectedLang = lang[selectedLangIndex];
                         auto pos = languageMenuWindow.langExtMap.find(selectedLang);
                         if (pos != languageMenuWindow.langExtMap.end())
@@ -81,7 +81,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     system(command.c_str());
                     endwin();
                     initscr();
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -89,7 +89,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
             case 'c' : {
                 if (curItem == 1) {
                     refreshCodeSnippetStatus = true;
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -99,7 +99,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     system("nvim");
                     endwin();
                     initscr();
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
 
                 if (curItem == 1 && !refreshCodeSnippetStatus) {
@@ -108,13 +108,13 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     wrefresh(launchMenuWin);
 
                     while (true) {
-                        int curCode = launchMenuWindow.handleKeyEvent(task);
-                        if (curCode == static_cast<int>(menuCodes::quit)) break;
-                        if (curCode == static_cast<int>(menuCodes::ok))
+                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
+                        if (curCode == menuCodes::quit) break;
+                        if (curCode == menuCodes::ok)
                             wrefresh(launchMenuWin);
                     }
 
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
 
                 if (curItem == 3) {
@@ -125,40 +125,48 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4, 2, cols / 8);
                     wrefresh(searchBarWin);
 
-                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, {""});
+                    SearchResultsMenuWindow searchResultsMenuWindow(curWin);
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4, 5, cols / 8, 4, 4);
                     wrefresh(searchResultMenuWin);
 
                     int cursorOffset = cols / 8 + 2;
-                    char key;
-                    while ((key = getch()) != 'q') {
+                    while (true) {
                         curs_set(1);
                         wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
-                        string searchText = searchBarWindow.handleKeyEvent();
+                        searchBarCodes curSbCode = searchBarWindow.handleKeyEvent();
                         curs_set(0);
-                        if (!searchText.empty())
-                            while (true) {
-                                int curCode = searchResultsMenuWindow.handleKeyEvent(&searchText);
-                                if (curCode == static_cast<int>(menuCodes::quit)) break;
-                                if (curCode == static_cast<int>(menuCodes::ok))
-                                    wrefresh(searchResultMenuWin);
-                            }
+                        if (curSbCode == searchBarCodes::quit) break;
+                        string searchText;
+                        bool isRequestRequired = true;
+
+                        if (curSbCode == searchBarCodes::textTyped) {
+                            isRequestRequired = true;
+                            searchText = searchBarWindow.getSearchText();
+                        }
+
+                        while (true) {
+                            menuCodes curCode = searchResultsMenuWindow.handleKeyEvent(isRequestRequired, searchText);
+                            if (curCode == menuCodes::quit) break;
+                            if (curCode == menuCodes::ok)
+                                wrefresh(searchResultMenuWin);
+                            isRequestRequired = false;
+                        }
                     }
 
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
 
             case 'q' :
-                return static_cast<int>(menuCodes::quit);
+                return menuCodes::quit;
 
             default:
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::ok;
         }
     }
 
-    return static_cast<int>(menuCodes::ok);
+    return menuCodes::ok;
 }
 
 bool MainMenuWindow::getRefreshCodeSnippetStatus() const {

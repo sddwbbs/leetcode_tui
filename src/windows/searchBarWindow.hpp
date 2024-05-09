@@ -5,6 +5,11 @@
 #include <ncurses.h>
 #include <string>
 
+enum class searchBarCodes : int {
+    quit,
+    textTyped
+};
+
 using std::string;
 
 class SearchBarWindow {
@@ -27,7 +32,7 @@ public:
 
     void refreshWindow(int rows, int cols, int x, int y);
 
-    string &handleKeyEvent();
+    searchBarCodes handleKeyEvent();
 
     [[nodiscard]] string getSearchText() const;
 };

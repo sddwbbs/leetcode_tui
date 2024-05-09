@@ -8,6 +8,7 @@
 #include "languageMenuWindow.hpp"
 #include "../searchBarWindow.hpp"
 #include "searchResultsMenuWindow.hpp"
+#include "../../helpers/requests/questionListRequest.hpp"
 
 #include <fstream>
 #include <filesystem>
@@ -26,7 +27,7 @@ class MainMenuWindow : public MenuWindow {
 public:
     explicit MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    int handleKeyEvent(Task *task);
+    menuCodes handleKeyEvent(Task *task);
 
     [[nodiscard]] bool getRefreshCodeSnippetStatus() const;
 };

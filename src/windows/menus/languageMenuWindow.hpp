@@ -54,5 +54,5 @@ public:
 
     explicit LanguageMenuWindow(WINDOW *parentWin);
 
-    int handleKeyEvent() override;
+    menuCodes handleKeyEvent() override;
 };

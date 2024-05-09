@@ -5,15 +5,19 @@
 #include "../../helpers/requests/questionListRequest.hpp"
 
 #include <nlohmann/json.hpp>
+#include <iomanip>
+#include <sstream>
 
 using json = nlohmann::json;
+using std::stringstream;
+using std::left;
+using std::setw;
 
 class SearchResultsMenuWindow : public MenuWindow {
-    vector<string> searchTasks();
-    string *searchText = nullptr;
+    vector<string> searchTasks(string &searchText);
 
 public:
-    explicit SearchResultsMenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
+    explicit SearchResultsMenuWindow(WINDOW *parentWin);
 
-    int handleKeyEvent(string *searchText);
+    menuCodes handleKeyEvent(bool isRequestRequired, string searchText);
 };

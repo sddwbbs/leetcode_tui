@@ -10,5 +10,5 @@ using std::vector;
 
 class QuestionListRequest {
 public:
-    static vector<json> getQuestionList(string *searchText);
+    static vector<json> getQuestionList(string &searchText);
 };

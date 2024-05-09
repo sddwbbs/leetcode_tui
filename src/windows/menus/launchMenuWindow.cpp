@@ -3,18 +3,18 @@
 LaunchMenuWindow::LaunchMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
         : MenuWindow(parentWin, menuItems) {}
 
-int LaunchMenuWindow::handleKeyEvent(Task *task) {
+menuCodes LaunchMenuWindow::handleKeyEvent(Task *task) {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
                 if (curItem > 0) menuUp(1, 1);
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::ok;
             }
 
             case 'j' : {
                 if (curItem < menuSize - 1) menuDown(1, 1);
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::ok;
             }
 
             case 10 : {
@@ -58,18 +58,18 @@ int LaunchMenuWindow::handleKeyEvent(Task *task) {
 
                     resultTextWindow.handleKeyEvent();
 
-                    return static_cast<int>(menuCodes::quit);
+                    return menuCodes::quit;
                 }
             }
 
             case 'q' : {
-                return static_cast<int>(menuCodes::quit);
+                return menuCodes::quit;
             }
 
             default:
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::ok;
         }
     }
 
-    return static_cast<int>(menuCodes::ok);
+    return menuCodes::ok;
 }

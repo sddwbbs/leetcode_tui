@@ -28,13 +28,13 @@ void SearchBarWindow::refreshWindow(int _rows, int _cols, int _x, int _y) {
 
 }
 
-string &SearchBarWindow::handleKeyEvent() {
+searchBarCodes SearchBarWindow::handleKeyEvent() {
     char ch;
 
     while ((ch = getch()) != 27) {
         switch (ch) {
             case '\n' : {
-                return searchText;
+                return searchBarCodes::textTyped;
             }
 
             case 127 : {
@@ -53,7 +53,7 @@ string &SearchBarWindow::handleKeyEvent() {
                 break;
 
             case 'q' : {
-                return emptyStr;
+                return searchBarCodes::quit;
             }
 
             default:
@@ -72,7 +72,7 @@ string &SearchBarWindow::handleKeyEvent() {
         mvwprintw(curWin, 1, 2, "%s", searchText.c_str());
         wrefresh(curWin);
     }
-    return emptyStr;
+    return searchBarCodes::quit;
 }
 
 string SearchBarWindow::getSearchText() const { return searchText; }
