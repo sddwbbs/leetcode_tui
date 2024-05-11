@@ -188,13 +188,13 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
                 string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
                 TextWindow taskTextWindow(task->getSingleTask(titleSlug).title, task->getSingleTask(titleSlug).content);
-                WINDOW *taskTextWin = taskTextWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
-                                                                          cols / 2 - (cols / 4));
+                WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1, y + cols / 2 - (cols / 2 + cols / 8) / 2);
                 wrefresh(taskTextWin);
 
                 taskTextWindow.handleKeyEvent();
 
-                return menuCodes::refreshWin;
+                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
+                return menuCodes::ok;
             }
 
             case '\n' : {
