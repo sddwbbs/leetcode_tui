@@ -125,7 +125,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4 + cols / 8, 2, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2);
                     wrefresh(searchBarWin);
 
-                    SearchResultsMenuWindow searchResultsMenuWindow(curWin);
+                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, (rows / 2 + rows / 4) - 4);
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4 + cols / 8, 5, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2, 2, 2);
                     wrefresh(searchResultMenuWin);
 
@@ -149,7 +149,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                         }
 
                         while (true) {
-                            menuCodes curCode = searchResultsMenuWindow.handleKeyEvent(isRequestRequired, searchText);
+                            menuCodes curCode = searchResultsMenuWindow.handleKeyEvent(isRequestRequired, searchText, task);
                             if (curCode == menuCodes::quit) break;
                             if (curCode == menuCodes::ok)
                                 wrefresh(searchResultMenuWin);

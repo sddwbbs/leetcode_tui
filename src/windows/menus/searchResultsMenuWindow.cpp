@@ -1,7 +1,7 @@
 #include "searchResultsMenuWindow.hpp"
 
-SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin)
-        : MenuWindow(parentWin) {
+SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin, const int menuItemsLimit)
+        : MenuWindow(parentWin), menuItemsLimit(menuItemsLimit) {
     string emptyStr;
     menuItems = searchTasks(emptyStr);
     menuSize = menuItems.size();
@@ -12,9 +12,10 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
     vector<string> items;
 
     int i = 0;
-    for (const auto& question : questionList) {
-        if (i < 20) {
+    for (const auto &question: questionList) {
+        if (i < menuItemsLimit) {
             string frontendId = question["frontendQuestionId"];
+            titleSlugMap[std::stoi(frontendId)] = question["titleSlug"];
             string title = question["title"];
             string difficulty = question["difficulty"];
             string status;
@@ -29,10 +30,10 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
 
             stringstream ss;
             ss << std::setw(idWidth) << std::left << frontendId << " "
-            << std::setw(titleWidth) << std::left << title << " "
-            << std::setw(difficultyWidth) << difficulty << " "
-            << std::setw(statusWidth) << status << " "
-            << std::setw(paidOnlyWidth) << paidOnly;
+               << std::setw(titleWidth) << std::left << title << " "
+               << std::setw(difficultyWidth) << difficulty << " "
+               << std::setw(statusWidth) << status << " "
+               << std::setw(paidOnlyWidth) << paidOnly;
             string questionStr = ss.str();
             items.push_back(questionStr);
         } else break;
@@ -88,7 +89,8 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
     return curWin;
 }
 
-void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding,
+                                            Context context) {
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     wresize(curWin, rows, cols);
@@ -98,6 +100,22 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     wattron(curWin, COLOR_PAIR(4));
     box(curWin, 0, 0);
     wattroff(curWin, COLOR_PAIR(4));
+
+    wattron(stdscr, COLOR_PAIR(2));
+    int parentRows, parendCols;
+    getmaxyx(stdscr, parentRows, parendCols);
+    mvwprintw(stdscr, parentRows - 2, 3, "%s",
+              "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
+    wattroff(stdscr, COLOR_PAIR(2));
+
+    if (context == Context::nothingFound) {
+        wattron(stdscr, COLOR_PAIR(2));
+        string emptyLine(81, ' ');
+        mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
+        wattroff(stdscr, COLOR_PAIR(2));
+        wrefresh(curWin);
+        return;
+    }
 
     mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s%s%-*s",
               idWidth, "ID",
@@ -130,42 +148,56 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     wrefresh(curWin);
 }
 
-menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText) {
+menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText, Task *task) {
     if (isRequestRequired) {
         menuItems = searchTasks(searchText);
         curItem = 0;
         if (menuItems.empty()) {
             menuSize = 0;
             wclear(curWin);
-            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
-            mvwprintw(curWin, 3, 4, "%s", "Nothing found");
+            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::nothingFound);
+            mvwprintw(curWin, 3, 4, "%s", "NOTHING FOUND");
             wrefresh(curWin);
             return menuCodes::quit;
         }
         menuSize = menuItems.size();
-        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
     }
 
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
-            case 'k': {
+            case 'k' : {
                 if (curItem > 0) {
                     menuUp(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
                 }
                 break;
             }
 
-            case 'j': {
+            case 'j' : {
                 if (curItem < menuSize - 1) {
                     menuDown(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
                 }
                 break;
             }
 
-            case '\n': {
+            case 'r' : {
+                int curItem = getCurItem();
+                string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
+                string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
+                TextWindow taskTextWindow(task->getSingleTask(titleSlug).title, task->getSingleTask(titleSlug).content);
+                WINDOW *taskTextWin = taskTextWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
+                                                                          cols / 2 - (cols / 4));
+                wrefresh(taskTextWin);
+
+                taskTextWindow.handleKeyEvent();
+
+                return menuCodes::refreshWin;
+            }
+
+            case '\n' : {
                 // Handle selection, for example:
                 mvwprintw(curWin, menuSize + 2, 4, "Selected: %s", menuItems[curItem].c_str());
                 wrefresh(curWin);
@@ -173,7 +205,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 break;
             }
 
-            case 'q': {
+            case 'q' : {
                 return menuCodes::quit;
             }
 

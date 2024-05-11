@@ -9,6 +9,7 @@
 #include <iostream>
 
 #include "requests/dailyTaskRequest.hpp"
+#include "requests/singleTaskRequest.hpp"
 #include "requests/runCodeRequests.hpp"
 
 using std::string;
@@ -47,9 +48,9 @@ class Task {
 
     void extractText(GumboNode* node, string& plainText);
 
-    void saveToDb(bool dailyInDb, pqxx::work &tx);
+    void saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily);
 
-    void readFromDb(pqxx::work &tx);
+    void readFromDb(pqxx::work &tx, bool isDaily);
 
 public:
     Task() = delete;
@@ -62,7 +63,7 @@ public:
 
     TaskData &getDailyTask();
 
-    TaskData &getSingleTask();
+    TaskData &getSingleTask(string &titleSlug);
 
     [[nodiscard]] ResultData &runCode();
 
