@@ -4,6 +4,7 @@
 #include "../searchBarWindow.hpp"
 #include "../../helpers/requests/questionListRequest.hpp"
 #include "../textWindow.hpp"
+#include "languageMenuWindow.hpp"
 
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -17,13 +18,16 @@ using std::unordered_map;
 
 enum class Context : int {
     nothingFound,
-    standart
+    standard
 };
 
 class SearchResultsMenuWindow : public MenuWindow {
     vector<string> searchTasks(string &searchText);
 
     unordered_map<int, string> titleSlugMap;
+    bool refreshCodeSnippetStatus = true;
+    int selectedItem = 0;
+    string langExt;
     const int idWidth = 6;// 8
     const int titleWidth = 54; //50
     const int difficultyWidth = 15;//10

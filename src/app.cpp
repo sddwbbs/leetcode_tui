@@ -10,6 +10,7 @@ void App::startApp() {
     start_color();
     cbreak();
     noecho();
+    keypad(stdscr, TRUE);
 
     int rows, cols;
     getmaxyx(stdscr, rows, cols);

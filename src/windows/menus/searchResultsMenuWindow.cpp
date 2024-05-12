@@ -161,7 +161,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             return menuCodes::quit;
         }
         menuSize = menuItems.size();
-        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
+        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
     }
 
     int ch;
@@ -170,7 +170,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             case 'k' : {
                 if (curItem > 0) {
                     menuUp(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 }
                 break;
             }
@@ -178,7 +178,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             case 'j' : {
                 if (curItem < menuSize - 1) {
                     menuDown(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 }
                 break;
             }
@@ -193,7 +193,66 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
 
                 taskTextWindow.handleKeyEvent();
 
-                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standart);
+                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                return menuCodes::ok;
+            }
+
+            case 'o' : {
+                if (refreshCodeSnippetStatus || getCurItem() != selectedItem) {
+                    selectedItem = getCurItem();
+                    std::ofstream myFileOutput;
+                    string selectedLang;
+                    string codeSnippet;
+                    int selectedLangIndex = -1;
+
+                    LanguageMenuWindow languageMenuWindow(curWin);
+                    WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
+                                                                            x + 1, y + cols / 2 - (cols / 8), 2,5);
+                    wrefresh(languageMenuWin);
+
+                    while (true) {
+                        menuCodes curCode = languageMenuWindow.handleKeyEvent();
+                        if (curCode == menuCodes::itemSelected) {
+                            selectedLangIndex = languageMenuWindow.getCurItem();
+                            break;
+                        }
+                        if (curCode == menuCodes::quit) break;
+                        if (curCode == menuCodes::ok)
+                            wrefresh(languageMenuWin);
+                    }
+
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+
+                    if (selectedLangIndex == -1)
+                        return menuCodes::refreshWin;
+                    selectedLang = lang[selectedLangIndex];
+                    auto pos = languageMenuWindow.langExtMap.find(selectedLang);
+                    if (pos != languageMenuWindow.langExtMap.end())
+                        langExt = pos->second;
+
+                    int curItem = getCurItem();
+                    string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
+                    string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
+
+                    for (const auto &item: task->getSingleTask(titleSlug).codeSnippets) {
+                        if (item["lang"] == selectedLang) {
+                            codeSnippet = item["code"];
+                            break;
+                        }
+                    }
+
+                    myFileOutput.open("singleTask." + langExt);
+                    myFileOutput << codeSnippet;
+                    myFileOutput.close();
+                    refreshCodeSnippetStatus = false;
+                }
+
+                string command = "nvim singleTask." + langExt;
+                system(command.c_str());
+                endwin();
+                initscr();
+
+                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::ok;
             }
 

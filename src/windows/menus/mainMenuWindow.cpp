@@ -42,8 +42,8 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                         int selectedLangIndex = -1;
 
                         LanguageMenuWindow languageMenuWindow(curWin);
-                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(23, 40, rows / 2 - 11, cols / 2 - 20, 2,
-                                                                                5);
+                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 4,
+                                                                                rows / 6, cols / 2 - (cols / 8), 2,5);
                         wrefresh(languageMenuWin);
 
                         while (true) {
