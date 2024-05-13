@@ -74,7 +74,7 @@ void MenuWindow::menuUp(int _rowsPadding, int _colsPadding) {
     mvwprintw(curWin, curItem + rowsPadding, colsPadding, "%s", menuItems[curItem].c_str());
     wattroff(curWin, COLOR_PAIR(5));
 
-    wrefresh(curWin);
+    wnoutrefresh(curWin);
 }
 
 void MenuWindow::menuDown(int _rowsPadding, int _colsPadding) {
@@ -85,7 +85,7 @@ void MenuWindow::menuDown(int _rowsPadding, int _colsPadding) {
     mvwprintw(curWin, curItem + rowsPadding, colsPadding, "%s", menuItems[curItem].c_str());
     wattroff(curWin, COLOR_PAIR(5));
 
-    wrefresh(curWin);
+    wnoutrefresh(curWin);
 }
 
 menuCodes MenuWindow::handleKeyEvent() {

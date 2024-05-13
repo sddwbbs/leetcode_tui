@@ -26,7 +26,7 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
 
             string paidOnly;
             if (question["paidOnly"] == true)
-                paidOnly = "x";
+                paidOnly = "\U0001F512";
 
             stringstream ss;
             ss << std::setw(idWidth) << std::left << frontendId << " "
@@ -52,7 +52,7 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
     init_pair(5, COLOR_BLACK, COLOR_CYAN);
 
     curWin = newwin(rows, cols, x, y);
-    refresh();
+    wnoutrefresh(curWin);
 
     wattron(curWin, COLOR_PAIR(4));
     box(curWin, ACS_VLINE, ACS_HLINE);
@@ -113,7 +113,7 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
         string emptyLine(81, ' ');
         mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
         wattroff(stdscr, COLOR_PAIR(2));
-        wrefresh(curWin);
+        wnoutrefresh(curWin);
         return;
     }
 
@@ -145,7 +145,7 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + 3, ACS_VLINE, rows - 2);
     mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
 
-    wrefresh(curWin);
+    wnoutrefresh(curWin);
 }
 
 menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText, Task *task) {
@@ -157,7 +157,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             wclear(curWin);
             refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::nothingFound);
             mvwprintw(curWin, 3, 4, "%s", "NOTHING FOUND");
-            wrefresh(curWin);
+            wnoutrefresh(curWin);
             return menuCodes::quit;
         }
         menuSize = menuItems.size();
@@ -187,11 +187,25 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 int curItem = getCurItem();
                 string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
                 string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
-                TextWindow taskTextWindow(task->getSingleTask(titleSlug).title, task->getSingleTask(titleSlug).content);
-                WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1, y + cols / 2 - (cols / 2 + cols / 8) / 2);
-                wrefresh(taskTextWin);
 
-                taskTextWindow.handleKeyEvent();
+                if (menuItems[curItem].find("\U0001F512") != string::npos) {
+                    string content = "This task is paid only :(";
+                    titleSlug += " \U0001F512";
+                    TextWindow taskTextWindow(titleSlug, content);
+                    WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                    wrefresh(taskTextWin);
+
+                    taskTextWindow.handleKeyEvent();
+                } else {
+                    TextWindow taskTextWindow(task->getSingleTask(titleSlug).title,
+                                              task->getSingleTask(titleSlug).content);
+                    WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                    wrefresh(taskTextWin);
+
+                    taskTextWindow.handleKeyEvent();
+                }
 
                 refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::ok;
@@ -200,6 +214,23 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             case 'o' : {
                 if (refreshCodeSnippetStatus || getCurItem() != selectedItem) {
                     selectedItem = getCurItem();
+
+                    if (menuItems[curItem].find("\U0001F512") != string::npos) {
+                        string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
+                        string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
+                        string content = "This task is paid only :(";
+                        titleSlug += " \U0001F512";
+                        TextWindow taskTextWindow(titleSlug, content);
+                        WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                                                                        y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                        wrefresh(taskTextWin);
+
+                        taskTextWindow.handleKeyEvent();
+
+                        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                        return menuCodes::ok;
+                    }
+
                     std::ofstream myFileOutput;
                     string selectedLang;
                     string codeSnippet;
@@ -207,7 +238,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
 
                     LanguageMenuWindow languageMenuWindow(curWin);
                     WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
-                                                                            x + 1, y + cols / 2 - (cols / 8), 2,5);
+                                                                            x + 1, y + cols / 2 - (cols / 8), 2, 5);
                     wrefresh(languageMenuWin);
 
                     while (true) {
@@ -259,7 +290,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             case '\n' : {
                 // Handle selection, for example:
                 mvwprintw(curWin, menuSize + 2, 4, "Selected: %s", menuItems[curItem].c_str());
-                wrefresh(curWin);
+                wnoutrefresh(curWin);
                 // Return a code or perform an action based on the selection
                 break;
             }

@@ -1,18 +1,22 @@
 #include "textWindow.hpp"
 
 TextWindow::TextWindow(const string &title, const string &content)
-          : curWin(nullptr)
-          , rows(0)
-          , cols(0)
-          , title(title)
-          , content(content)
-          , contentLength(0)
-          , contentLines(0)
-          , startLine(0) {}
+        : curWin(nullptr)
+        , rows(0)
+        , cols(0)
+        , x(0)
+        , y(0)
+        , title(title)
+        , content(content)
+        , contentLength(0)
+        , contentLines(0)
+        , startLine(0) {}
 
-WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
+WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     if (curWin != nullptr) return curWin;
+    scrollok(curWin, TRUE);
     rows = _rows, cols = _cols;
+    x = _x, y = _y;
     init_pair(3, COLOR_WHITE, COLOR_BLACK);
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     init_pair(5, COLOR_BLACK, COLOR_CYAN); // Color pair for yellow text on blue background
@@ -46,13 +50,16 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int x, int y) {
     return curWin;
 }
 
-void TextWindow::refreshWindow(int _rows, int _cols, int x, int y) {
+void TextWindow::refreshWindow(int _rows, int _cols, int _x, int _y) {
+    scrollok(curWin, TRUE);
     startLine = 0;
     werase(curWin);
-    wrefresh(curWin);
-    rows = _rows, cols = _cols;
-    wresize(curWin, rows, cols);
-    mvwin(curWin, x, y);
+
+    if (_rows != rows || _cols != cols || _x != x || _y == y) {
+        rows = _rows, cols = _cols;
+        wresize(curWin, rows, cols);
+        mvwin(curWin, x, y);
+    }
 
     wattron(curWin, COLOR_PAIR(3));
     printWindowContent();
@@ -66,7 +73,7 @@ void TextWindow::refreshWindow(int _rows, int _cols, int x, int y) {
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
     wattroff(curWin, COLOR_PAIR(3));
 
-    wrefresh(curWin);
+    wnoutrefresh(curWin);
 }
 
 void TextWindow::handleKeyEvent() {
@@ -124,8 +131,6 @@ void TextWindow::printWindowContent() const {
             startOfLine = i;
         }
     }
-
-    string hello = "hfalf";
 }
 
 void TextWindow::clearWindowContent() const {
@@ -138,6 +143,4 @@ void TextWindow::clearWindowContent() const {
     wattron(curWin, COLOR_PAIR(3));
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
     wattroff(curWin, COLOR_PAIR(3));
-
-    wrefresh(curWin);
 }
