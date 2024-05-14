@@ -151,7 +151,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                         while (true) {
                             menuCodes curCode = searchResultsMenuWindow.handleKeyEvent(isRequestRequired, searchText, task);
                             if (curCode == menuCodes::quit) break;
-                            if (curCode == menuCodes::ok)
+                            if (curCode == menuCodes::refreshWin)
                                 wnoutrefresh(searchResultMenuWin);
                             isRequestRequired = false;
                         }

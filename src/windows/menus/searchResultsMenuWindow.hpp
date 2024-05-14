@@ -26,7 +26,7 @@ class SearchResultsMenuWindow : public MenuWindow {
 
     unordered_map<int, string> titleSlugMap;
     bool refreshCodeSnippetStatus = true;
-    int selectedItem = 0;
+    int selectedItem = -1;
     string langExt;
     const int idWidth = 6;// 8
     const int titleWidth = 54; //50

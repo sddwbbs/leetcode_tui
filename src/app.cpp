@@ -48,7 +48,7 @@ void App::startApp() {
                 wattroff(mainWin, COLOR_PAIR(2));
                 wnoutrefresh(mainWin);
                 wnoutrefresh(mainMenuWin);
-                refresh();
+                doupdate();
             }
         }
 

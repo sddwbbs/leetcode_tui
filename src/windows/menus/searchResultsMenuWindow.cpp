@@ -8,6 +8,8 @@ SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin, const int me
 }
 
 vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
+    if (!titleSlugMap.empty())
+        titleSlugMap.clear();
     vector<json> questionList = QuestionListRequest::getQuestionList(searchText);
     vector<string> items;
 
@@ -208,13 +210,11 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 }
 
                 refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                return menuCodes::ok;
+                return menuCodes::refreshWin;
             }
 
             case 'o' : {
                 if (refreshCodeSnippetStatus || getCurItem() != selectedItem) {
-                    selectedItem = getCurItem();
-
                     if (menuItems[curItem].find("\U0001F512") != string::npos) {
                         string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
                         string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
@@ -228,13 +228,12 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                         taskTextWindow.handleKeyEvent();
 
                         refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                        return menuCodes::ok;
+                        return menuCodes::refreshWin;
                     }
 
                     std::ofstream myFileOutput;
                     string selectedLang;
                     string codeSnippet;
-                    int selectedLangIndex = -1;
 
                     LanguageMenuWindow languageMenuWindow(curWin);
                     WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
@@ -243,26 +242,26 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
 
                     while (true) {
                         menuCodes curCode = languageMenuWindow.handleKeyEvent();
-                        if (curCode == menuCodes::itemSelected) {
-                            selectedLangIndex = languageMenuWindow.getCurItem();
-                            break;
+                        if (curCode == menuCodes::itemSelected) break;
+                        if (curCode == menuCodes::quit) {
+                            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                            return menuCodes::refreshWin;
                         }
-                        if (curCode == menuCodes::quit) break;
-                        if (curCode == menuCodes::ok)
+                        if (curCode == menuCodes::refreshWin)
                             wrefresh(languageMenuWin);
                     }
 
+                    selectedItem = getCurItem();
+                    refreshCodeSnippetStatus = false;
+
                     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
 
-                    if (selectedLangIndex == -1)
-                        return menuCodes::refreshWin;
-                    selectedLang = lang[selectedLangIndex];
+                    selectedLang = lang[languageMenuWindow.getCurItem()];
                     auto pos = languageMenuWindow.langExtMap.find(selectedLang);
                     if (pos != languageMenuWindow.langExtMap.end())
                         langExt = pos->second;
 
-                    int curItem = getCurItem();
-                    string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
+                    string frontendId = menuItems[selectedItem].substr(0, menuItems[selectedItem].find(' '));
                     string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
 
                     for (const auto &item: task->getSingleTask(titleSlug).codeSnippets) {
@@ -275,7 +274,6 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                     myFileOutput.open("singleTask." + langExt);
                     myFileOutput << codeSnippet;
                     myFileOutput.close();
-                    refreshCodeSnippetStatus = false;
                 }
 
                 string command = "nvim singleTask." + langExt;
@@ -284,7 +282,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 initscr();
 
                 refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                return menuCodes::ok;
+                return menuCodes::refreshWin;
             }
 
             case '\n' : {
@@ -298,9 +296,6 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             case 'q' : {
                 return menuCodes::quit;
             }
-
-            default:
-                break;
         }
     }
 
