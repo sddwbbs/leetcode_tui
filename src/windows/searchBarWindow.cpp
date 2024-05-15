@@ -3,9 +3,6 @@
 WINDOW *SearchBarWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols, x = _x, y = _y;
-    init_pair(3, COLOR_WHITE, COLOR_BLACK);
-    init_pair(4, COLOR_CYAN, COLOR_BLACK);
-    init_pair(5, COLOR_BLACK, COLOR_CYAN); // Color pair for yellow text on blue background
 
     curWin = newwin(rows, cols, x, y);
     scrollok(curWin, TRUE);
@@ -40,10 +37,7 @@ searchBarCodes SearchBarWindow::handleKeyEvent() {
                 return searchBarCodes::textTyped;
             }
 
-            case 127 : {
-                if (!searchText.empty()) searchText.pop_back();
-            }
-                break;
+            case 127 :
 
             case 7 : {
                 if (!searchText.empty()) searchText.pop_back();

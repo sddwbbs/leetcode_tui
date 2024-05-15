@@ -9,12 +9,12 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task) {
         switch (ch) {
             case 'k' : {
                 if (curItem > 0) menuUp(1, 1);
-                return menuCodes::ok;
+                return menuCodes::refreshWin;
             }
 
             case 'j' : {
                 if (curItem < menuSize - 1) menuDown(1, 1);
-                return menuCodes::ok;
+                return menuCodes::refreshWin;
             }
 
             case 10 : {
@@ -65,9 +65,6 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task) {
             case 'q' : {
                 return menuCodes::quit;
             }
-
-            default:
-                return menuCodes::ok;
         }
     }
 

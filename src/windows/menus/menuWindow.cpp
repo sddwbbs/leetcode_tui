@@ -12,9 +12,6 @@ WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPa
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
-    init_pair(3, COLOR_WHITE, COLOR_BLACK);
-    init_pair(4, COLOR_CYAN, COLOR_BLACK);
-    init_pair(5, COLOR_BLACK, COLOR_CYAN);
 
     curWin = newwin(rows, cols, x, y);
     refresh();

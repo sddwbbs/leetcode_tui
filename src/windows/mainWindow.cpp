@@ -10,9 +10,6 @@ WINDOW *MainWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols;
     x = _x, y = _y;
-    init_color(COLOR_BLACK, 82, 35, 72);
-    init_pair(1, COLOR_WHITE, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
     curWin = newwin(rows, cols, x, y);
     refresh();

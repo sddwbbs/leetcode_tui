@@ -5,6 +5,7 @@
 #include "../../helpers/requests/questionListRequest.hpp"
 #include "../textWindow.hpp"
 #include "languageMenuWindow.hpp"
+#include "launchMenuWindow.hpp"
 
 #include <nlohmann/json.hpp>
 #include <sstream>

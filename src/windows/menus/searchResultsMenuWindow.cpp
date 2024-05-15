@@ -106,13 +106,19 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     wattron(stdscr, COLOR_PAIR(2));
     int parentRows, parendCols;
     getmaxyx(stdscr, parentRows, parendCols);
-    mvwprintw(stdscr, parentRows - 2, 3, "%s",
-              "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
+    const string emptyLine(parendCols - 4, ' ');
+    mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
+    if (getCurItem() != selectedItem) {
+        mvwprintw(stdscr, parentRows - 2, 3, "%s",
+                  "Press 'r' to read the task | 'o' to open it in nvim ");
+    } else {
+        mvwprintw(stdscr, parentRows - 2, 3, "%s",
+                  "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet | 'Enter' to Run or Submit");
+    }
     wattroff(stdscr, COLOR_PAIR(2));
 
     if (context == Context::nothingFound) {
         wattron(stdscr, COLOR_PAIR(2));
-        string emptyLine(81, ' ');
         mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
         wattroff(stdscr, COLOR_PAIR(2));
         wnoutrefresh(curWin);
@@ -133,7 +139,11 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     mvwhline(curWin, 2, colsPadding, ACS_HLINE, cols - 2 * colsPadding);
 
     for (int i = 0; i < menuSize; ++i) {
-        if (i == curItem) {
+        if (i == selectedItem) {
+            wattron(curWin, COLOR_PAIR(6));
+            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            wattroff(curWin, COLOR_PAIR(6));
+        } else if (i == curItem) {
             wattron(curWin, COLOR_PAIR(5));
             mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
             wattroff(curWin, COLOR_PAIR(5));
@@ -148,6 +158,7 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
 
     wnoutrefresh(curWin);
+    doupdate();
 }
 
 menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText, Task *task) {
@@ -285,12 +296,32 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 return menuCodes::refreshWin;
             }
 
+            case 'c' : {
+                if (!refreshCodeSnippetStatus && getCurItem() == selectedItem) {
+                    selectedItem = -1;
+                    refreshCodeSnippetStatus = true;
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                }
+                return menuCodes::refreshWin;
+            }
+
             case '\n' : {
-                // Handle selection, for example:
-                mvwprintw(curWin, menuSize + 2, 4, "Selected: %s", menuItems[curItem].c_str());
-                wnoutrefresh(curWin);
-                // Return a code or perform an action based on the selection
-                break;
+                if (!refreshCodeSnippetStatus && getCurItem() == selectedItem) {
+                    LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
+                    WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, x + getCurItem() + 1, cols / 2 + cols / 4, 1, 1);
+                    wrefresh(launchMenuWin);
+
+                    while (true) {
+                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
+                        if (curCode == menuCodes::quit) {
+                            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                            return menuCodes::refreshWin;
+                        }
+                        if (curCode == menuCodes::refreshWin)
+                            wrefresh(launchMenuWin);
+                    }
+                }
+                return menuCodes::refreshWin;
             }
 
             case 'q' : {

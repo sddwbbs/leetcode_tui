@@ -53,7 +53,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                                 break;
                             }
                             if (curCode == menuCodes::quit) break;
-                            if (curCode == menuCodes::ok)
+                            if (curCode == menuCodes::refreshWin)
                                 wrefresh(languageMenuWin);
                         }
 
@@ -110,7 +110,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     while (true) {
                         menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
                         if (curCode == menuCodes::quit) break;
-                        if (curCode == menuCodes::ok)
+                        if (curCode == menuCodes::refreshWin)
                             wrefresh(launchMenuWin);
                     }
 

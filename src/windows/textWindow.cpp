@@ -17,9 +17,6 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     scrollok(curWin, TRUE);
     rows = _rows, cols = _cols;
     x = _x, y = _y;
-    init_pair(3, COLOR_WHITE, COLOR_BLACK);
-    init_pair(4, COLOR_CYAN, COLOR_BLACK);
-    init_pair(5, COLOR_BLACK, COLOR_CYAN); // Color pair for yellow text on blue background
 
     contentLength = static_cast<int>(content.length());
 
