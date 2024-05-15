@@ -1,6 +1,6 @@
-#include <cpr/cpr.h>
-
 #include "dailyTaskRequest.hpp"
+
+#include <cpr/cpr.h>
 
 json DailyTaskRequest::getAllData() {
     json result;

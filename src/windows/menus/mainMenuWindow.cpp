@@ -1,34 +1,34 @@
 #include "mainMenuWindow.hpp"
 
 MainMenuWindow::MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
-        : MenuWindow(parentWin, menuItems) {}
+        : MenuWindow(parentWin, menuItems) {
+    getmaxyx(parentWin, rows, cols);
+}
 
-int MainMenuWindow::handleKeyEvent(Task *task) {
+menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
                 if (curItem > 0) menuUp(2, 5);
-                return static_cast<int>(menuCodes::refreshWin);
+                return menuCodes::refreshWin;
             }
 
             case 'j' : {
                 if (curItem < menuSize - 1) menuDown(2, 5);
-                return static_cast<int>(menuCodes::refreshWin);
+                return menuCodes::refreshWin;
             }
 
             case 'r' : {
                 if (curItem == 1) {
                     TextWindow dailyTaskTextWindow(task->getDailyTask().title, task->getDailyTask().content);
-                    int rows, cols;
-                    getmaxyx(stdscr, rows, cols);
-//                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(30, 80, rows / 2 - 15, cols / 2 - 40);
-                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2  + rows / 4, cols / 2, rows / 6, cols / 2 - (cols / 4));
+                    WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
+                                                                              cols / 2 - (cols / 4));
                     wrefresh(dailyTaskTextWin);
 
                     dailyTaskTextWindow.handleKeyEvent();
 
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -42,24 +42,23 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                         int selectedLangIndex = -1;
 
                         LanguageMenuWindow languageMenuWindow(curWin);
-                        int rows, cols;
-                        getmaxyx(stdscr, rows, cols);
-                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(23, 40, rows / 2 - 11, cols / 2 - 20, 2, 5);
+                        WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 4,
+                                                                                rows / 6, cols / 2 - (cols / 8), 2,5);
                         wrefresh(languageMenuWin);
 
                         while (true) {
-                            int curCode = languageMenuWindow.handleKeyEvent(task);
-                            if (curCode == static_cast<int>(menuCodes::itemSelected)) {
+                            menuCodes curCode = languageMenuWindow.handleKeyEvent();
+                            if (curCode == menuCodes::itemSelected) {
                                 selectedLangIndex = languageMenuWindow.getCurItem();
                                 break;
                             }
-                            if (curCode == static_cast<int>(menuCodes::quit)) break;
-                            if (curCode == static_cast<int>(menuCodes::ok))
+                            if (curCode == menuCodes::quit) break;
+                            if (curCode == menuCodes::refreshWin)
                                 wrefresh(languageMenuWin);
                         }
 
                         if (selectedLangIndex == -1)
-                            return static_cast<int>(menuCodes::refreshWin);
+                            return menuCodes::refreshWin;
                         selectedLang = lang[selectedLangIndex];
                         auto pos = languageMenuWindow.langExtMap.find(selectedLang);
                         if (pos != languageMenuWindow.langExtMap.end())
@@ -82,7 +81,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     system(command.c_str());
                     endwin();
                     initscr();
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -90,7 +89,7 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
             case 'c' : {
                 if (curItem == 1) {
                     refreshCodeSnippetStatus = true;
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
@@ -100,37 +99,78 @@ int MainMenuWindow::handleKeyEvent(Task *task) {
                     system("nvim");
                     endwin();
                     initscr();
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
                 }
 
                 if (curItem == 1 && !refreshCodeSnippetStatus) {
                     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
-                    int rows, cols;
-                    getmaxyx(stdscr, rows, cols);
                     WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, rows / 2, cols / 2 + 18, 1, 1);
                     wrefresh(launchMenuWin);
 
                     while (true) {
-                        int curCode = launchMenuWindow.handleKeyEvent(task);
-                        if (curCode == static_cast<int>(menuCodes::quit)) break;
-                        if (curCode == static_cast<int>(menuCodes::ok))
+                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
+                        if (curCode == menuCodes::quit) break;
+                        if (curCode == menuCodes::refreshWin)
                             wrefresh(launchMenuWin);
                     }
 
-                    return static_cast<int>(menuCodes::refreshWin);
+                    return menuCodes::refreshWin;
+                }
+
+                if (curItem == 3) {
+                    MainWindow::clearWindowContent();
+                    wrefresh(parentWin);
+
+                    SearchBarWindow searchBarWindow;
+                    WINDOW *searchBarWin = searchBarWindow.drawWindow(3, cols / 2 + cols / 4 + cols / 8, 2, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2);
+                    wrefresh(searchBarWin);
+
+                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, (rows / 2 + rows / 4) - 4);
+                    WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(rows / 2 + rows / 4, cols / 2 + cols / 4 + cols / 8, 5, (cols - (cols / 2 + cols / 4 + cols / 8)) / 2, 2, 2);
+                    wrefresh(searchResultMenuWin);
+
+                    int cursorOffset = (cols - (cols / 2 + cols / 4 + cols / 8)) / 2 + 2;
+                    while (true) {
+                        curs_set(1);
+                        wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
+                        searchBarCodes curSbCode = searchBarWindow.handleKeyEvent();
+                        curs_set(0);
+
+                        if (curSbCode == searchBarCodes::quit) break;
+                        string searchText;
+                        bool isRequestRequired = true;
+
+                        if (curSbCode == searchBarCodes::ok)
+                            isRequestRequired = false;
+
+                        if (curSbCode == searchBarCodes::textTyped) {
+                            isRequestRequired = true;
+                            searchText = searchBarWindow.getSearchText();
+                        }
+
+                        while (true) {
+                            menuCodes curCode = searchResultsMenuWindow.handleKeyEvent(isRequestRequired, searchText, task);
+                            if (curCode == menuCodes::quit) break;
+                            if (curCode == menuCodes::refreshWin)
+                                wnoutrefresh(searchResultMenuWin);
+                            isRequestRequired = false;
+                        }
+                    }
+
+                    return menuCodes::refreshWin;
                 }
             }
                 break;
 
             case 'q' :
-                return static_cast<int>(menuCodes::quit);
+                return menuCodes::quit;
 
             default:
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::ok;
         }
     }
 
-    return static_cast<int>(menuCodes::ok);
+    return menuCodes::ok;
 }
 
 bool MainMenuWindow::getRefreshCodeSnippetStatus() const {

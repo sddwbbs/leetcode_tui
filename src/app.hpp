@@ -10,5 +10,6 @@
 
 class App {
 public:
+    static void initColors();
     static void startApp();
 };

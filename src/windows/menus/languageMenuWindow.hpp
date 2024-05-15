@@ -54,5 +54,5 @@ public:
 
     explicit LanguageMenuWindow(WINDOW *parentWin);
 
-    int handleKeyEvent(Task *task) override;
+    menuCodes handleKeyEvent() override;
 };

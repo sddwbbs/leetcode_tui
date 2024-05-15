@@ -7,27 +7,33 @@
 
 #include "../../helpers/task.hpp"
 
-using std::vector;
-using std::string;
-
 enum class menuCodes : int {
     ok,
     quit,
     refreshWin,
-    itemSelected
+    itemSelected,
 };
+
+using std::vector;
+using std::string;
 
 class MenuWindow {
 protected:
     WINDOW *curWin = nullptr;
     WINDOW *parentWin = nullptr;
-    const vector<string> menuItems;
+    vector<string> menuItems;
     int curItem = 0;
     int menuSize = 0;
+    int rows = 0;
+    int cols = 0;
+    int x = 0;
+    int y = 0;
+    int rowsPadding = 0;
+    int colsPadding = 0;
 
-    void menuUp(int rowsPadding, int colsPadding);
+    void menuUp(int _rowsPadding, int _colsPadding);
 
-    void menuDown(int rowsPadding, int colsPadding);
+    void menuDown(int _rowsPadding, int _colsPadding);
 
 public:
     MenuWindow(const MenuWindow &) = delete;
@@ -38,9 +44,11 @@ public:
 
     explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    WINDOW *drawWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding);
+    explicit MenuWindow(WINDOW *parentWin);
 
-    void refreshWindow(int row, int col, int x, int y, int rowsPadding, int colsPadding);
+    virtual WINDOW *drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
+
+    virtual void refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
 
     [[nodiscard]] const char *getMenuItem(int index) const;
 
@@ -48,5 +56,5 @@ public:
 
     [[nodiscard]] int getMenuSize() const;
 
-    virtual int handleKeyEvent(Task *task) = 0;
+    virtual menuCodes handleKeyEvent();
 };

@@ -1,13 +1,29 @@
 #include <pqxx/pqxx>
 #include <iostream>
+#include <clocale>
 
 #include "app.hpp"
 #include "windows/menus/mainMenuWindow.hpp"
 #include "windows/mainWindow.hpp"
 
+void App::initColors() {
+    init_color(COLOR_BLACK, 82, 35, 72);
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_BLACK);
+    init_pair(4, COLOR_CYAN, COLOR_BLACK);
+    init_pair(5, COLOR_BLACK, COLOR_CYAN);
+    init_pair(6, COLOR_BLACK, COLOR_GREEN);
+}
+
 void App::startApp() {
+    setlocale(LC_ALL, "");
     initscr();
     start_color();
+    initColors();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
 
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
@@ -16,7 +32,7 @@ void App::startApp() {
         pqxx::connection conn("dbname=leetcode_tui user=postgres password=8080 hostaddr=127.0.0.1 port=5432");
 
         WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
-        MainMenuWindow mainMenuWindow(stdscr, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  "});
+        MainMenuWindow mainMenuWindow(mainWin, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  ", "\U0001F50D Search        "});
         WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
 
         wrefresh(mainWin);
@@ -27,9 +43,9 @@ void App::startApp() {
 
         Task *task = new Task(conn);
         while (true) {
-            int curCode = mainMenuWindow.handleKeyEvent(task);
-            if (curCode == static_cast<int>(menuCodes::quit)) break;
-            if (curCode == static_cast<int>(menuCodes::refreshWin)) {
+            menuCodes curCode = mainMenuWindow.handleKeyEvent(task);
+            if (curCode == menuCodes::quit) break;
+            if (curCode == menuCodes::refreshWin) {
                 MainWindow::refreshWindow(rows, cols, 0, 0);
                 mainMenuWindow.refreshWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
                 wattron(mainWin, COLOR_PAIR(2));
@@ -41,8 +57,9 @@ void App::startApp() {
                                   "'Enter' to Run or Submit");
                 }
                 wattroff(mainWin, COLOR_PAIR(2));
-                wrefresh(mainWin);
-                wrefresh(mainMenuWin);
+                wnoutrefresh(mainWin);
+                wnoutrefresh(mainMenuWin);
+                doupdate();
             }
         }
 

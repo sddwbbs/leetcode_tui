@@ -13,6 +13,8 @@ class TextWindow {
     WINDOW *curWin;
     int rows;
     int cols;
+    int x;
+    int y;
     const string &title;
     const string &content;
     int contentLength;
@@ -25,7 +27,11 @@ class TextWindow {
 
     void printWindowContent() const;
 
-    void clearWindowContent() const;
+//    void recreateWindow(int _rows, int _cols, int x, int y);
+//
+//    void updateVisibleContent();
+//
+//    [[nodiscard]] string getContentLine(int lineNumber) const;
 
 public:
     TextWindow(const TextWindow &) = delete;
@@ -41,4 +47,6 @@ public:
     void refreshWindow(int rows, int cols, int x, int y);
 
     void handleKeyEvent();
+
+    void clearWindowContent() const;
 };

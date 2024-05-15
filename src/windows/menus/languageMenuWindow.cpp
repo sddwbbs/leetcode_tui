@@ -3,32 +3,31 @@
 LanguageMenuWindow::LanguageMenuWindow(WINDOW *parentWin)
         : MenuWindow(parentWin, lang) {}
 
-int LanguageMenuWindow::handleKeyEvent(Task *task) {
+menuCodes LanguageMenuWindow::handleKeyEvent() {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
                 if (curItem > 0) menuUp(2, 5);
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::refreshWin;
             }
 
             case 'j' : {
                 if (curItem < menuSize - 1) menuDown(2, 5);
-                return static_cast<int>(menuCodes::ok);
+                return menuCodes::refreshWin;
             }
 
             case 10 : {
-                return static_cast<int>(menuCodes::itemSelected);
+                return menuCodes::itemSelected;
             }
 
-            case 'q' : {
-                return static_cast<int>(menuCodes::quit);
-            }
+            case 'q' :
 
-            default:
-                return static_cast<int>(menuCodes::ok);
+            case 'o' : {
+                return menuCodes::quit;
+            }
         }
     }
 
-    return static_cast<int>(menuCodes::ok);
+    return menuCodes::ok;
 }
