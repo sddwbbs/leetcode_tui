@@ -3,21 +3,32 @@
 Task::Task(pqxx::connection &conn)
         : conn(conn) {}
 
-void Task::extractText(GumboNode *node, std::string &plainText) {
-    if (node->type == GUMBO_NODE_TEXT) {
-        plainText.append(node->v.text.text);
-    } else if (node->type == GUMBO_NODE_ELEMENT &&
-               node->v.element.tag != GUMBO_TAG_SCRIPT &&
-               node->v.element.tag != GUMBO_TAG_STYLE) {
-        if (node->v.element.tag == GUMBO_TAG_SUP) {
-            plainText.append("^");
-        }
-        plainText.append(" ");
-        GumboVector *children = &node->v.element.children;
-        for (unsigned int i = 0; i < children->length; ++i) {
-            extractText(static_cast<GumboNode *>(children->data[i]), plainText);
-        }
+string Task::exec(const char* cmd) const {
+    std::array<char, 128> buffer{};
+    string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
     }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+
+    return result;
+}
+
+string Task::htmlToPlainText(const string& html) const {
+    const char* tempFile = "/tmp/temp.html";
+    std::ofstream out(tempFile);
+    out << html;
+    out.close();
+
+    string command = "elinks -dump " + string(tempFile);
+    string plainText = exec(command.c_str());
+
+    std::remove(tempFile);
+
+    return plainText;
 }
 
 void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
@@ -164,14 +175,7 @@ TaskData &Task::getDailyTask() {
         singleTask.difficulty = jsonDailyTask["difficulty"].get<string>();
         singleTask.content = jsonDailyTask["content"].get<string>();
 
-        GumboOutput *output = gumbo_parse(singleTask.content.c_str());
-        if (output) {
-            singleTask.content = "";
-            extractText(output->root, singleTask.content);
-            gumbo_destroy_output(&kGumboDefaultOptions, output);
-        } else {
-            std::cerr << "Error parsing HTML.\n";
-        }
+        singleTask.content = htmlToPlainText(singleTask.content);
 
         singleTask.topicTags = jsonDailyTask["topicTags"];
         singleTask.codeSnippets = jsonDailyTask["codeSnippets"];
@@ -211,14 +215,16 @@ TaskData &Task::getSingleTask(string &titleSlug) {
         singleTask.difficulty = jsonSingleTask["difficulty"].get<string>();
         singleTask.content = jsonSingleTask["content"].get<string>();
 
-        GumboOutput *output = gumbo_parse(singleTask.content.c_str());
-        if (output) {
-            singleTask.content = "";
-            extractText(output->root, singleTask.content);
-            gumbo_destroy_output(&kGumboDefaultOptions, output);
-        } else {
-            std::cerr << "Error parsing HTML.\n";
-        }
+//        GumboOutput *output = gumbo_parse(singleTask.content.c_str());
+//        if (output) {
+//            singleTask.content = "";
+//            extractText(output->root, singleTask.content);
+//            gumbo_destroy_output(&kGumboDefaultOptions, output);
+//        } else {
+//            std::cerr << "Error parsing HTML.\n";
+//        }
+
+        singleTask.content = htmlToPlainText(singleTask.content);
 
         singleTask.topicTags = jsonSingleTask["topicTags"];
         singleTask.codeSnippets = jsonSingleTask["codeSnippets"];
@@ -236,8 +242,13 @@ TaskData &Task::getSingleTask(string &titleSlug) {
     return singleTask;
 }
 
-ResultData &Task::runCode() {
-    std::ifstream myFileInput("dailyTask.cpp");
+ResultData &Task::runCode(bool isDaily, const string &langExt) {
+    string fileName;
+    if (isDaily)
+        fileName = "dailyTask.";
+    else
+        fileName = "singleTask.";
+    std::ifstream myFileInput(fileName + langExt);
     std::stringstream ss;
     string typedCode;
 

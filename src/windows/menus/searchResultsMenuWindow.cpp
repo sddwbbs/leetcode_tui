@@ -312,7 +312,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                     wrefresh(launchMenuWin);
 
                     while (true) {
-                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
+                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task, false, langExt);
                         if (curCode == menuCodes::quit) {
                             refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                             return menuCodes::refreshWin;

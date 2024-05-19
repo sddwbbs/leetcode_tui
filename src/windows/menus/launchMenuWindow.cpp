@@ -3,7 +3,7 @@
 LaunchMenuWindow::LaunchMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
         : MenuWindow(parentWin, menuItems) {}
 
-menuCodes LaunchMenuWindow::handleKeyEvent(Task *task) {
+menuCodes LaunchMenuWindow::handleKeyEvent(Task *task, bool isDaily, const string &langExt) {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
@@ -19,7 +19,7 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task) {
 
             case 10 : {
                 if (curItem == 0) {
-                    ResultData resultData = task->runCode();
+                    ResultData resultData = task->runCode(isDaily, langExt);
                     string title;
                     bool isCompileError = false;
                     string content;

@@ -41,4 +41,4 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/requests/singleTaskRequest.hpp
 )
 
-target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq gumbo)
+target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)

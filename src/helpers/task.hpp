@@ -46,7 +46,9 @@ class Task {
 
     ResultData resultData;
 
-    void extractText(GumboNode* node, string& plainText);
+    string exec(const char* cmd) const;
+
+    [[nodiscard]] string htmlToPlainText(const std::string& html) const;
 
     void saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily);
 
@@ -65,7 +67,7 @@ public:
 
     TaskData &getSingleTask(string &titleSlug);
 
-    [[nodiscard]] ResultData &runCode();
+    [[nodiscard]] ResultData &runCode(bool isDaily, const string &langExt);
 
     string submitCode();
 };

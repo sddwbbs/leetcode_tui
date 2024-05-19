@@ -108,7 +108,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     wrefresh(launchMenuWin);
 
                     while (true) {
-                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task);
+                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task, true, langExt);
                         if (curCode == menuCodes::quit) break;
                         if (curCode == menuCodes::refreshWin)
                             wrefresh(launchMenuWin);
