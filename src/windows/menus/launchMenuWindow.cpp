@@ -51,9 +51,9 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task, bool isDaily, const strin
 
                     WINDOW *dailyTaskTextWin = nullptr;
                     if (!isCompileError)
-                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 40, rows / 2 - 8, cols / 2 - 20);
+                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 40, rows / 2 - 8, cols / 2 - 20, 3);
                     else
-                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 80, rows / 2 - 8, cols / 2 - 40);
+                        dailyTaskTextWin = resultTextWindow.drawWindow(16, 80, rows / 2 - 8, cols / 2 - 40, 3);
                     wrefresh(dailyTaskTextWin);
 
                     resultTextWindow.handleKeyEvent();

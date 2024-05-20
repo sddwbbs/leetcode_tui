@@ -197,6 +197,13 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
             }
 
             case 'r' : {
+                string emptyStr = "Wait";
+                string loadingStr = "Loading...";
+                TextWindow loadingWindow(emptyStr, loadingStr);
+                WINDOW *loadingWin = loadingWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                                                              y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
+                wrefresh(loadingWin);
+
                 int curItem = getCurItem();
                 string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
                 string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
@@ -206,7 +213,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                     titleSlug += " \U0001F512";
                     TextWindow taskTextWindow(titleSlug, content);
                     WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
                     wrefresh(taskTextWin);
 
                     taskTextWindow.handleKeyEvent();
@@ -214,11 +221,12 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                     TextWindow taskTextWindow(task->getSingleTask(titleSlug).title,
                                               task->getSingleTask(titleSlug).content);
                     WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
                     wrefresh(taskTextWin);
 
                     taskTextWindow.handleKeyEvent();
                 }
+                werase(loadingWin);
 
                 refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::refreshWin;
@@ -233,7 +241,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                         titleSlug += " \U0001F512";
                         TextWindow taskTextWindow(titleSlug, content);
                         WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                        y + cols / 2 - (cols / 2 + cols / 8) / 2);
+                                                                        y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
                         wrefresh(taskTextWin);
 
                         taskTextWindow.handleKeyEvent();

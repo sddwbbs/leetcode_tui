@@ -21,9 +21,28 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
 
             case 'r' : {
                 if (curItem == 1) {
-                    TextWindow dailyTaskTextWindow(task->getDailyTask().title, task->getDailyTask().content);
+                    string emptyStr = "Wait";
+                    string loadingStr = "Loading...";
+                    TextWindow loadingWindow(emptyStr, loadingStr);
+                    WINDOW *loadingWin = loadingWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
+                                                                  cols / 2 - (cols / 4), 4);
+                    wrefresh(loadingWin);
+
+                    int boxColorPair = 4;
+                    string title = task->getDailyTask().title;
+                    string difficulty = task->getDailyTask().difficulty;
+                    if (difficulty == "Easy")
+                        boxColorPair = 2;
+                    if (difficulty == "Medium")
+                        boxColorPair = 7;
+                    if (difficulty == "Hard")
+                        boxColorPair = 8;
+                    string content = task->getDailyTask().content;
+                    TextWindow dailyTaskTextWindow(title, content);
+
+                    werase(loadingWin);
                     WINDOW *dailyTaskTextWin = dailyTaskTextWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
-                                                                              cols / 2 - (cols / 4));
+                                                                              cols / 2 - (cols / 4), boxColorPair);
                     wrefresh(dailyTaskTextWin);
 
                     dailyTaskTextWindow.handleKeyEvent();

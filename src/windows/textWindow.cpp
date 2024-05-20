@@ -12,7 +12,7 @@ TextWindow::TextWindow(const string &title, const string &content)
         , contentLines(0)
         , startLine(0) {}
 
-WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
+WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y, int boxColorPair) {
     if (curWin != nullptr) return curWin;
     scrollok(curWin, TRUE);
     rows = _rows, cols = _cols;
@@ -36,9 +36,9 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     printWindowContent();
     wattroff(curWin, COLOR_PAIR(3));
 
-    wattron(curWin, COLOR_PAIR(4));
+    wattron(curWin, COLOR_PAIR(boxColorPair));
     box(curWin, ACS_VLINE, ACS_HLINE);
-    wattroff(curWin, COLOR_PAIR(4));
+    wattroff(curWin, COLOR_PAIR(boxColorPair));
 
     wattron(curWin, COLOR_PAIR(3));
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
@@ -47,7 +47,7 @@ WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     return curWin;
 }
 
-void TextWindow::refreshWindow(int _rows, int _cols, int _x, int _y) {
+void TextWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int boxColorPair) {
     scrollok(curWin, TRUE);
     startLine = 0;
     werase(curWin);
@@ -62,9 +62,9 @@ void TextWindow::refreshWindow(int _rows, int _cols, int _x, int _y) {
     printWindowContent();
     wattroff(curWin, COLOR_PAIR(3));
 
-    wattron(curWin, COLOR_PAIR(4));
+    wattron(curWin, COLOR_PAIR(boxColorPair));
     box(curWin, ACS_VLINE, ACS_HLINE);
-    wattroff(curWin, COLOR_PAIR(4));
+    wattroff(curWin, COLOR_PAIR(boxColorPair));
 
     wattron(curWin, COLOR_PAIR(3));
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
@@ -82,9 +82,6 @@ void TextWindow::handleKeyEvent() {
                 break;
             case 'j' :
                 scrollDown();
-                break;
-            case 'c' :
-                refreshWindow(20, 60, 10, 12);
                 break;
             case 'r' :
                 return;

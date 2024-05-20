@@ -39,6 +39,7 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/requests/questionListRequest.hpp
         src/helpers/requests/singleTaskRequest.cpp
         src/helpers/requests/singleTaskRequest.hpp
+        src/helpers/config.hpp
 )
 
 target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)

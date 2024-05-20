@@ -27,12 +27,6 @@ class TextWindow {
 
     void printWindowContent() const;
 
-//    void recreateWindow(int _rows, int _cols, int x, int y);
-//
-//    void updateVisibleContent();
-//
-//    [[nodiscard]] string getContentLine(int lineNumber) const;
-
 public:
     TextWindow(const TextWindow &) = delete;
 
@@ -42,9 +36,9 @@ public:
 
     explicit TextWindow(const string &title, const string &content);
 
-    WINDOW *drawWindow(int rows, int cols, int x, int y);
+    WINDOW *drawWindow(int rows, int cols, int x, int y, int boxColorPair);
 
-    void refreshWindow(int rows, int cols, int x, int y);
+    void refreshWindow(int rows, int cols, int x, int y, int boxColorPair);
 
     void handleKeyEvent();
 
