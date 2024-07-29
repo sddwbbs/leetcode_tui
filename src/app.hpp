@@ -12,9 +12,13 @@
 #include <pqxx/pqxx>
 #include <iostream>
 #include <clocale>
+#include <fstream>
 
 class App {
 public:
     static void initColors();
+
     static void startApp();
+
+    static void getDbConfig();
 };

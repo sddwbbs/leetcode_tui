@@ -27,15 +27,11 @@ void App::startApp() {
     getmaxyx(stdscr, rows, cols);
 
     try {
-        pqxx::connection conn("dbname=leetcode_tui user=postgres password=8080 hostaddr=127.0.0.1 port=5432");
-
-        WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
-
         try {
-            Config::setConfig(std::getenv("csrftoken"), std::getenv("LEETCODE_SESSION"));
+            Config::getConfig();
         } catch(std::exception const &e) {
             string title = "Warning";
-            string content = "Please create environment variables with your csrf token and leetcode session";
+            string content = "Please check the correctness of the config.conf file";
             TextWindow warningWindow(title, content);
             WINDOW* warningWin = warningWindow.drawWindow(10, 80, rows / 2 - 5, cols / 2 - 40, 4);
             wrefresh(warningWin);
@@ -44,6 +40,11 @@ void App::startApp() {
             return;
         }
 
+        string options = "dbname=" + Config::getDbname() + " " + "user=" + Config::getUser()
+                         + "password=" + Config::getPassword() + "hostaddr=" + Config::getHostaddr() + "port=" + Config::getPort();
+        pqxx::connection conn(options);
+
+        WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
         MainMenuWindow mainMenuWindow(mainWin, {"Open Nvim        ", "Open Daily Task  ", "Open Tasks List  ", "\U0001F50D Search        "});
         WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
 
@@ -80,4 +81,8 @@ void App::startApp() {
         std::cerr << "ERROR: " << e.what() << '\n';
         return;
     }
+}
+
+void App::getDbConfig() {
+
 }
