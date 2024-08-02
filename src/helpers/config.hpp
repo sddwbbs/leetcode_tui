@@ -6,13 +6,13 @@
 using std::string;
 
 class Config {
-    static string csrftoken;
-    static string leetcodeSession;
-    static string dbname;
-    static string user;
-    static string password;
-    static string hostaddr;
-    static string port;
+    static inline string csrftoken;
+    static inline string leetcodeSession;
+    static inline string dbname;
+    static inline string user;
+    static inline string password;
+    static inline string hostaddr;
+    static inline string port;
 
 public:
     static void getConfig() {
@@ -24,17 +24,17 @@ public:
                 continue;
 
             switch(param[0]) {
-                case 'd' : dbname = param.substr(param.find('='), param.length() - param.find('='));
-                case 'u' : user = param.substr(param.find('='), param.length() - param.find('='));
+                case 'd' : dbname = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
+                case 'u' : user = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
                 case 'p' : {
                     if (param[1] == 'a')
-                        password = param.substr(param.find('='), param.length() - param.find('='));
+                        password = param.substr(param.find('=') + 1, param.length() - param.find('='));
                     else
-                        port = param.substr(param.find('='), param.length() - param.find('='));
-                }
-                case 'h' : hostaddr = param.substr(param.find('='), param.length() - param.find('='));
-                case 'c' : csrftoken = param.substr(param.find('='), param.length() - param.find('='));
-                case 'L' : leetcodeSession = param.substr(param.find('='), param.length() - param.find('='));
+                        port = param.substr(param.find('=') + 1, param.length() - param.find('='));
+                } break;
+                case 'h' : hostaddr = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
+                case 'c' : csrftoken = param.substr(param.find('=')+ 1, param.length() - param.find('=')); break;
+                case 'L' : leetcodeSession = param.substr(param.find('=') + 1, param.length() - param.find('='));
             }
         }
     }

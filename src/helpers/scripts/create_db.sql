@@ -1,0 +1,1 @@
+CREATE DATABASE leetcode_tui;

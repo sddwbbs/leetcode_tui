@@ -35,7 +35,7 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
     if (isDaily) {
         if (dailyInDb)
             try {
-                tx.exec("UPDATE leetcode_tui.tasks SET refresh_time = NULL WHERE refresh_time IS NOT NULL");
+                tx.exec("UPDATE tasks SET refresh_time = NULL WHERE refresh_time IS NOT NULL");
             } catch (std::exception const &e) {
                 std::cerr << "ERROR: " << e.what() << '\n';
             }
@@ -61,14 +61,14 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
         bool alreadyInTable = false;
         try {
             alreadyInTable = tx.query_value<bool>(
-                    "SELECT COUNT(*) FROM leetcode_tui.tasks WHERE id = $1", singleTask.id);
+                    "SELECT COUNT(*) FROM tasks WHERE id = " + std::to_string(singleTask.id));
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
         }
 
         if (alreadyInTable) {
             try {
-                tx.exec_params("UPDATE leetcode_tui.tasks SET refresh_time = $1 WHERE id = $2", refreshedTime,
+                tx.exec_params("UPDATE tasks SET refresh_time = $1 WHERE id = $2", refreshedTime,
                                singleTask.id);
             } catch (std::exception const &e) {
                 std::cerr << "ERROR: " << e.what() << '\n';
@@ -76,7 +76,7 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
         } else {
             try {
                 tx.exec_params(
-                        "INSERT INTO leetcode_tui.tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
+                        "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
                         "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
                         singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
                         singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
@@ -88,7 +88,7 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
     } else {
         try {
             tx.exec_params(
-                    "INSERT INTO leetcode_tui.tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only) "
+                    "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                     singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
                     singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
@@ -104,7 +104,7 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
         try {
             pqxx::result result = tx.exec(
                     "SELECT id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only "
-                    "FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
+                    "FROM tasks WHERE refresh_time IS NOT NULL");
 
             const auto &row = result.begin();
             singleTask.id = row["id"].as<int>();
@@ -123,7 +123,7 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
         try {
             pqxx::result result = tx.exec(
                     "SELECT id, frontend_id, title, difficulty, content, topic_tags, code_snippets, paid_only "
-                    "FROM leetcode_tui.tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
+                    "FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
 
             const auto &row = result.begin();
             singleTask.id = row["id"].as<int>();
@@ -150,7 +150,7 @@ TaskData &Task::getDailyTask() {
     bool dailyInDb = false;
     try {
         dailyInDb = tx.query_value<bool>(
-                "SELECT COUNT(*) FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
+                "SELECT COUNT(*) FROM tasks WHERE refresh_time IS NOT NULL");
     } catch (std::exception const &e) {
         std::cerr << '\n' << "ERROR: " << e.what() << '\n';
     }
@@ -159,7 +159,7 @@ TaskData &Task::getDailyTask() {
     if (dailyInDb) {
         try {
             refreshTimeFromDb = tx.query_value<time_t>(
-                    "SELECT refresh_time FROM leetcode_tui.tasks WHERE refresh_time IS NOT NULL");
+                    "SELECT refresh_time FROM tasks WHERE refresh_time IS NOT NULL");
         } catch (std::exception const &e) {
             std::cerr << '\n' << "ERROR: " << e.what() << '\n';
         }
@@ -201,7 +201,7 @@ TaskData &Task::getSingleTask(string &titleSlug) {
     bool alreadyInDb = false;
     try {
         alreadyInDb = tx.query_value<bool>(
-                "SELECT COUNT(*) FROM leetcode_tui.tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
+                "SELECT COUNT(*) FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
     } catch (std::exception const &e) {
         std::cerr << "ERROR: " << e.what() << '\n';
     }
@@ -214,15 +214,6 @@ TaskData &Task::getSingleTask(string &titleSlug) {
         singleTask.title = jsonSingleTask["title"].get<string>();
         singleTask.difficulty = jsonSingleTask["difficulty"].get<string>();
         singleTask.content = jsonSingleTask["content"].get<string>();
-
-//        GumboOutput *output = gumbo_parse(singleTask.content.c_str());
-//        if (output) {
-//            singleTask.content = "";
-//            extractText(output->root, singleTask.content);
-//            gumbo_destroy_output(&kGumboDefaultOptions, output);
-//        } else {
-//            std::cerr << "Error parsing HTML.\n";
-//        }
 
         singleTask.content = htmlToPlainText(singleTask.content);
 
