@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 2121
+      POSTGRES_DB: leetcode_tui
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "1234:5432"
+    networks:
+      - my_network
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://user:2121@db:5432/leetcode_tui
+      TERM: xterm-256color
+      TERM_PROGRAM: bash
+      RUNNING_IN_DOCKER: "true"
+    volumes:
+      - .:/usr/src/app
+    command: ["/bin/bash", "-c", "/usr/src/app/scripts/wait_for_db && while true; do sleep 3600; done"]
+    networks:
+      - my_network
+    tty: true
+    stdin_open: true
+
+volumes:
+  pgdata:
+
+networks:
+  my_network:
+    external: true

@@ -1,5 +1,11 @@
 #include "app.hpp"
 
+std::shared_ptr<pqxx::connection> App::conn = nullptr;
+
+std::shared_ptr<Task> App::task = nullptr;
+
+Task *App::taskPtr = nullptr;
+
 bool App::isDatabaseExists(pqxx::connection &conn, const string &dbName) {
     pqxx::work tx{conn};
     const pqxx::result res = tx.exec(
@@ -8,8 +14,31 @@ bool App::isDatabaseExists(pqxx::connection &conn, const string &dbName) {
     return !res.empty();
 }
 
+bool App::isTableExists(pqxx::connection &conn, const string &tableName) {
+    try {
+        pqxx::work txn(conn);
+        string query = "SELECT EXISTS (SELECT FROM information_schema.tables "
+                            "WHERE table_schema = 'public' AND table_name = '" + tableName + "');";
+
+        const pqxx::result result = txn.exec(query);
+
+        bool tableExists = result[0][0].as<bool>();
+
+        return tableExists;
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 string App::readScript(const string &fileName) {
-    std::ifstream script("../src/helpers/scripts/" + fileName);
+    std::ifstream script;
+
+    if (RUNNING_IN_DOCKER)
+        script.open(SCRIPTS_PATH_DOCKER + fileName);
+    else
+        script.open(SCRIPTS_PATH_LOCAL + fileName);
+
     std::stringstream buffer;
     buffer << script.rdbuf();
     return buffer.str();
@@ -42,46 +71,77 @@ void App::startApp() {
     getmaxyx(stdscr, rows, cols);
 
     try {
-        try {
-            Config::getConfig();
-        } catch (std::exception const &e) {
+        if (const char *runningInDocker = std::getenv("RUNNING_IN_DOCKER"); runningInDocker != nullptr)
+            RUNNING_IN_DOCKER = true;
+        else
+            RUNNING_IN_DOCKER = false;
+
+        if (bool configLoaded = Config::getConfig(); !configLoaded) {
             string title = "Warning";
             string content = "Please check the correctness of the config.conf file";
             TextWindow warningWindow(title, content);
             WINDOW *warningWin = warningWindow.drawWindow(10, 80, rows / 2 - 5, cols / 2 - 40, 4);
             wrefresh(warningWin);
-            getch();
+            std::this_thread::sleep_for(std::chrono::seconds(5));
             endwin();
             return;
         }
 
-        const string configOptions = "dbname=" + Config::getDbname() + " user=" + Config::getUser()
-                         + " password=" + Config::getPassword() + " hostaddr=" + Config::getHostaddr() + " port=" +
-                         Config::getPort();
-        const string newOptions = "dbname=leetcode_tui user=" + Config::getUser()
-             + " password=" + Config::getPassword() + " hostaddr=" + Config::getHostaddr() + " port=" +
-             Config::getPort();
+        if (RUNNING_IN_DOCKER) {
+            const char *db_url = std::getenv("DATABASE_URL");
+            if (db_url == nullptr) {
+                string title = "Warning";
+                string content = "DATABASE_URL environment variable is not set";
+                TextWindow warningWindow(title, content);
+                WINDOW *warningWin = warningWindow.drawWindow(10, 80, rows / 2 - 5, cols / 2 - 40, 4);
+                wrefresh(warningWin);
+                std::this_thread::sleep_for(std::chrono::seconds(5));
+                endwin();
+                return;
+            }
 
-        pqxx::connection conn(configOptions);
-        bool databaseExists = isDatabaseExists(conn, "leetcode_tui");
+            conn = std::make_shared<pqxx::connection>(db_url);
 
-        if (!databaseExists) {
-            string createDbScript = readScript("create_db.sql");
-            pqxx::nontransaction tx{conn};
-            tx.exec(createDbScript);
-            tx.commit();
+            if (bool tableExists = isTableExists(*conn, "tasks"); !tableExists) {
+                string createTableScript = readScript("create_table.sql");
+                pqxx::nontransaction tx{*conn};
+                tx.exec(createTableScript);
+                tx.commit();
+            }
+        } else {
+            const string configOptions = "dbname=" + Config::getDbname() + " user=" + Config::getUser()
+                                         + " password=" + Config::getPassword() + " hostaddr=" + Config::getHostaddr() +
+                                         " port=" +
+                                         Config::getPort();
+            const string newOptions = "dbname=leetcode_tui user=" + Config::getUser()
+                                      + " password=" + Config::getPassword() + " host=" + Config::getHostaddr() +
+                                      " port=" +
+                                      Config::getPort();
+
+            conn = std::make_shared<pqxx::connection>(configOptions);
+            bool databaseExists = isDatabaseExists(*conn, "leetcode_tui");
+
+            if (!databaseExists) {
+                string createDbScript = readScript("create_db.sql");
+                pqxx::nontransaction tx{*conn};
+                tx.exec(createDbScript);
+                tx.commit();
+            }
+
+            conn->close();
+
+            conn = std::make_shared<pqxx::connection>(newOptions);
+
+            if (!databaseExists) {
+                string createTableScript = readScript("create_table.sql");
+                pqxx::nontransaction tx{*conn};
+                tx.exec(createTableScript);
+                tx.commit();
+            }
         }
 
-        conn.close();
-
-        pqxx::connection newConn(newOptions);
-
-        if (!databaseExists) {
-            string createTableScript = readScript("create_table.sql");
-            pqxx::nontransaction tx{newConn};
-            tx.exec(createTableScript);
-            tx.commit();
-        }
+        task = std::make_shared<Task>(*conn);
+        taskPtr = &*task;
 
         WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
         MainMenuWindow mainMenuWindow(mainWin, {
@@ -93,10 +153,8 @@ void App::startApp() {
         wrefresh(mainWin);
         wrefresh(mainMenuWin);
 
-        Task *task = new Task(newConn);
-
         while (true) {
-            menuCodes curCode = mainMenuWindow.handleKeyEvent(task);
+            menuCodes curCode = mainMenuWindow.handleKeyEvent(taskPtr);
             if (curCode == menuCodes::quit) break;
             if (curCode == menuCodes::refreshWin) {
                 MainWindow::refreshWindow(rows, cols, 0, 0);
@@ -116,7 +174,6 @@ void App::startApp() {
             }
         }
 
-        delete task;
         endwin();
     } catch (std::exception const &e) {
         std::cerr << "ERROR: " << e.what() << '\n';

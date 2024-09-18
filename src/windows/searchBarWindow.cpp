@@ -15,7 +15,7 @@ WINDOW *SearchBarWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     wattroff(curWin, COLOR_PAIR(4));
 
     wattron(curWin, COLOR_PAIR(3));
-    mvwprintw(curWin, 0, 6, " %s %s ", "\U0001F50D", " Search ");
+    mvwprintw(curWin, 0, 6, " %s ", " Search ");
     wattroff(curWin, COLOR_PAIR(3));
 
     return curWin;

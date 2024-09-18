@@ -1,5 +1,6 @@
 #pragma once
 
+#include "helpers/constants.hpp"
 #include "helpers/config.hpp"
 #include "windows/mainWindow.hpp"
 #include "windows/menus/menuWindow.hpp"
@@ -14,10 +15,20 @@
 #include <clocale>
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 class App {
+    static std::shared_ptr<pqxx::connection> conn;
+
+    static std::shared_ptr<Task> task;
+
+    static Task *taskPtr;
+
 public:
     static bool isDatabaseExists(pqxx::connection &conn, const string &dbName);
+
+    static bool isTableExists(pqxx::connection &conn, const string &tableName);
 
     static string readScript(const string &fileName);
 

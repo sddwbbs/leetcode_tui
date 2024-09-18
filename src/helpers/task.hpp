@@ -3,7 +3,6 @@
 #include <string>
 #include <nlohmann/json.hpp>
 #include <pqxx/pqxx>
-#include <gumbo.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>

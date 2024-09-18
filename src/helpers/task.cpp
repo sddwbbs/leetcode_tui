@@ -100,7 +100,7 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
 }
 
 void Task::readFromDb(pqxx::work &tx, bool isDaily) {
-    if (isDaily) {
+    if (isDaily) { 
         try {
             pqxx::result result = tx.exec(
                     "SELECT id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only "

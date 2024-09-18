@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.22)
 project(leetcode_tui)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -40,6 +40,7 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/requests/singleTaskRequest.cpp
         src/helpers/requests/singleTaskRequest.hpp
         src/helpers/config.hpp
+        src/helpers/constants.hpp
 )
 
 target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)
