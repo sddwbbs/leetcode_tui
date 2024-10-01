@@ -21,23 +21,25 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
 
             case 'r' : {
                 if (curItem == 1) {
-                    string emptyStr = "Wait";
+                    string waitingStr = "Wait";
                     string loadingStr = "Loading...";
-                    TextWindow loadingWindow(emptyStr, loadingStr);
+                    TextWindow loadingWindow(waitingStr, loadingStr);
                     WINDOW *loadingWin = loadingWindow.drawWindow(rows / 2 + rows / 4, cols / 2, rows / 6,
                                                                   cols / 2 - (cols / 4), 4);
                     wrefresh(loadingWin);
 
                     int boxColorPair = 4;
-                    string title = task->getDailyTask().title;
-                    string difficulty = task->getDailyTask().difficulty;
+                    TaskData curDailyTask = task->getDailyTask();
+
+                    string title = curDailyTask.title;
+                    string difficulty = curDailyTask.difficulty;
                     if (difficulty == "Easy")
                         boxColorPair = 2;
                     if (difficulty == "Medium")
                         boxColorPair = 7;
                     if (difficulty == "Hard")
                         boxColorPair = 8;
-                    string content = task->getDailyTask().content;
+                    // string content = task->getDailyTask().content;
                     TextWindow dailyTaskTextWindow(title, content);
 
                     werase(loadingWin);

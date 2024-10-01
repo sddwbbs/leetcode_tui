@@ -15,8 +15,9 @@ class TextWindow {
     int cols;
     int x;
     int y;
-    const string &title;
-    const string &content;
+    const string title;
+    const string content;
+    const vector<string> contentVec;
     int contentLength;
     int contentLines;
     int startLine;
@@ -34,7 +35,9 @@ public:
 
     TextWindow &operator=(const TextWindow &) = delete;
 
-    explicit TextWindow(const string &title, const string &content);
+    explicit TextWindow(string title, string content);
+
+    explicit TextWindow(string title, vector<string> contentVec);
 
     WINDOW *drawWindow(int rows, int cols, int x, int y, int boxColorPair);
 

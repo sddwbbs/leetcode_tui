@@ -17,18 +17,38 @@ string Task::exec(const char* cmd) const {
     return result;
 }
 
-string Task::htmlToPlainText(const string& html) const {
-    const char* tempFile = "/tmp/temp.html";
-    std::ofstream out(tempFile);
-    out << html;
+void Task::htmlToPlainText(const string& htmlContent) {
+    // const char* tempFile = "/tmp/temp.html";
+    // std::ofstream out(tempFile);
+    // out << html;
+    // out.close();
+    //
+    // string command = "elinks -dump " + string(tempFile);
+    // string plainText = exec(command.c_str());
+    //
+    // std::remove(tempFile);
+    //
+    // return plainText;
+
+    const string tempHtmlFile = "/tmp/temp.html";
+    const string tempTxtFile = "/tmp/temp.txt";
+
+    std::ofstream out(tempHtmlFile);
+    out << htmlContent;
     out.close();
 
-    string command = "elinks -dump " + string(tempFile);
-    string plainText = exec(command.c_str());
+    string command = "w3m -dump " + tempHtmlFile + " > " + tempTxtFile;
+    system(command.c_str());
 
-    std::remove(tempFile);
+    std::ifstream in(tempTxtFile);
+    string line;
 
-    return plainText;
+    singleTask.content.clear();
+    while (getline(in, line)) {
+        this->singleTask.content.push_back(line);
+    }
+
+    in.close();
 }
 
 void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
@@ -75,11 +95,16 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
             }
         } else {
             try {
+                string content;
+                for (const auto &elem : singleTask.content) {
+                    content += elem + '\n';
+                }
+
                 tx.exec_params(
                         "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
                         "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
                         singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
-                        singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
+                        singleTask.difficulty, content, singleTask.topicTags.dump(),
                         singleTask.codeSnippets.dump(), singleTask.paidOnly, refreshedTime);
             } catch (std::exception const &e) {
                 std::cerr << "ERROR: " << e.what() << '\n';
@@ -87,11 +112,16 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
         }
     } else {
         try {
+            string content;
+            for (const auto &elem : singleTask.content) {
+                content += elem + '\n';
+            }
+
             tx.exec_params(
                     "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only) "
                     "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                     singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
-                    singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
+                    singleTask.difficulty, content, singleTask.topicTags.dump(),
                     singleTask.codeSnippets.dump(), singleTask.paidOnly);
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
@@ -112,7 +142,15 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
             singleTask.titleSlug = row["title_slug"].as<string>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-            singleTask.content = row["content"].as<string>();
+            // singleTask.content = row["content"].as<string>();
+
+            singleTask.content.clear();
+            std::stringstream ss(row["content"].as<string>());
+            string line;
+            while (getline(ss, line)) {
+                singleTask.content.push_back(line);
+            }
+
             singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
             singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
             singleTask.paidOnly = row["paid_only"].as<bool>();
@@ -130,7 +168,15 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
             singleTask.frontendId = row["frontend_id"].as<int>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-            singleTask.content = row["content"].as<string>();
+            // singleTask.content = row["content"].as<string>();
+
+            singleTask.content.clear();
+            std::stringstream ss(row["content"].as<string>());
+            string line;
+            while (getline(ss, line)) {
+                singleTask.content.push_back(line);
+            }
+
             singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
             singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
             singleTask.paidOnly = row["paid_only"].as<bool>();
@@ -173,9 +219,12 @@ TaskData &Task::getDailyTask() {
         singleTask.titleSlug = jsonDailyTask["titleSlug"].get<string>();
         singleTask.title = jsonDailyTask["title"].get<string>();
         singleTask.difficulty = jsonDailyTask["difficulty"].get<string>();
-        singleTask.content = jsonDailyTask["content"].get<string>();
+        // singleTask.content = jsonDailyTask["content"].get<string>();
+        //
+        // singleTask.content = htmlToPlainText(singleTask.content);
 
-        singleTask.content = htmlToPlainText(singleTask.content);
+        const string htmlContent = jsonDailyTask["content"].get<string>();
+        htmlToPlainText(htmlContent);
 
         singleTask.topicTags = jsonDailyTask["topicTags"];
         singleTask.codeSnippets = jsonDailyTask["codeSnippets"];
@@ -213,9 +262,12 @@ TaskData &Task::getSingleTask(string &titleSlug) {
         singleTask.frontendId = std::stoi(jsonSingleTask["frontendId"].get<string>());
         singleTask.title = jsonSingleTask["title"].get<string>();
         singleTask.difficulty = jsonSingleTask["difficulty"].get<string>();
-        singleTask.content = jsonSingleTask["content"].get<string>();
+        // singleTask.content = jsonSingleTask["content"].get<string>();
+        //
+        // singleTask.content = htmlToPlainText(singleTask.content);
 
-        singleTask.content = htmlToPlainText(singleTask.content);
+        const string htmlContent = jsonSingleTask["content"].get<string>();
+        htmlToPlainText(htmlContent);
 
         singleTask.topicTags = jsonSingleTask["topicTags"];
         singleTask.codeSnippets = jsonSingleTask["codeSnippets"];
@@ -252,6 +304,7 @@ ResultData &Task::runCode(bool isDaily, const string &langExt) {
     json response = RunCodeRequests::getResult(singleTask.id, singleTask.titleSlug, typedCode);
 
     resultData.statusMessage = response["status_msg"];
+
     if (resultData.statusMessage == "Accepted") {
         resultData.totalTestCases = response["total_testcases"];
         resultData.totalCorrect = response["total_correct"];

@@ -21,7 +21,8 @@ struct TaskData {
     string titleSlug;
     string title;
     string difficulty;
-    string content;
+    // string content;
+    vector<string> content;
     json topicTags;
     json codeSnippets;
     bool paidOnly;
@@ -47,7 +48,7 @@ class Task {
 
     string exec(const char* cmd) const;
 
-    [[nodiscard]] string htmlToPlainText(const std::string& html) const;
+    void htmlToPlainText(const string& htmlContent);
 
     void saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily);
 

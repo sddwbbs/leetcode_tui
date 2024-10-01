@@ -1,16 +1,31 @@
 #include "textWindow.hpp"
 
-TextWindow::TextWindow(const string &title, const string &content)
+#include <utility>
+
+TextWindow::TextWindow(string title, string content)
         : curWin(nullptr)
         , rows(0)
         , cols(0)
         , x(0)
         , y(0)
-        , title(title)
-        , content(content)
+        , title(std::move(title))
+        , content(std::move(content))
         , contentLength(0)
         , contentLines(0)
         , startLine(0) {}
+
+TextWindow::TextWindow(string title, vector<string> contentVec)
+        : curWin(nullptr)
+        , rows(0)
+        , cols(0)
+        , x(0)
+        , y(0)
+        , title(std::move(title))
+        , contentVec(std::move(contentVec))
+        , contentLength(0)
+        , contentLines(0)
+        , startLine(0) {}
+
 
 WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y, int boxColorPair) {
     if (curWin != nullptr) return curWin;
