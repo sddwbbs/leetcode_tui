@@ -11,8 +11,6 @@ find_package(PostgreSQL REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined,leak")
 
 add_executable(leetcode_tui src/main.cpp
-        src/windows/mainWindow.hpp
-        src/windows/mainWindow.cpp
         src/windows/menus/menuWindow.cpp
         src/windows/menus/menuWindow.hpp
         src/helpers/requests/dailyTaskRequest.hpp
@@ -41,6 +39,7 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/requests/singleTaskRequest.hpp
         src/helpers/config.hpp
         src/helpers/constants.hpp
+        src/helpers/constants.cpp
 )
 
 target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)

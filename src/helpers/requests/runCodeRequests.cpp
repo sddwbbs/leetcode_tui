@@ -1,6 +1,6 @@
-#include <cpr/cpr.h>
-
 #include "runCodeRequests.hpp"
+
+#include <cpr/cpr.h>
 
 json RunCodeRequests::getResult(const int questionId, const string &titleSlug, const string &typedCode) {
     string testCases;

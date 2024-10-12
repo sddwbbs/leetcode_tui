@@ -3,61 +3,68 @@
 #include <utility>
 
 TextWindow::TextWindow(string title, string content)
-        : curWin(nullptr)
-        , rows(0)
-        , cols(0)
-        , x(0)
-        , y(0)
-        , title(std::move(title))
-        , content(std::move(content))
-        , contentLength(0)
-        , contentLines(0)
-        , startLine(0) {}
+    : curWin(nullptr)
+      , rows(0)
+      , cols(0)
+      , x(0)
+      , y(0)
+      , title(std::move(title))
+      , content(std::move(content))
+      , contentLength(0)
+      , contentLines(0)
+      , startLine(0) {}
 
 TextWindow::TextWindow(string title, vector<string> contentVec)
-        : curWin(nullptr)
-        , rows(0)
-        , cols(0)
-        , x(0)
-        , y(0)
-        , title(std::move(title))
-        , contentVec(std::move(contentVec))
-        , contentLength(0)
-        , contentLines(0)
-        , startLine(0) {}
-
+    : curWin(nullptr)
+      , rows(0)
+      , cols(0)
+      , x(0)
+      , y(0)
+      , title(std::move(title))
+      , contentVec(std::move(contentVec))
+      , contentLength(0)
+      , contentLines(0)
+      , startLine(0) {}
 
 WINDOW *TextWindow::drawWindow(int _rows, int _cols, int _x, int _y, int boxColorPair) {
     if (curWin != nullptr) return curWin;
-    scrollok(curWin, TRUE);
+    // scrollok(curWin, TRUE);
     rows = _rows, cols = _cols;
     x = _x, y = _y;
 
-    contentLength = static_cast<int>(content.length());
+    int maxContentLength = 0;
 
-    int limit = cols - 4;
-    for (int i = 0; i < contentLength; ++i) {
-        if (content[i] == '\n' || i - limit == 0) {
-            ++contentLines;
-            if (i - limit == 0) limit += cols - 4;
-            while (content[i] == '\n' || content[i] == ' ') ++i;
-        }
+    for (const auto &elem : contentVec) {
+        if (elem.length() > maxContentLength)
+            maxContentLength = static_cast<int>(elem.length());
     }
 
-    curWin = newwin(rows, cols, x, y);
-    scrollok(curWin, TRUE);
+    // contentLength = static_cast<int>(content.length());
+    //
+    // int limit = cols - 4;
+    // for (int i = 0; i < contentLength; ++i) {
+    //     if (content[i] == '\n' || i - limit == 0) {
+    //         ++contentLines;
+    //         if (i - limit == 0) limit += cols - 4;
+    //         while (content[i] == '\n' || content[i] == ' ') ++i;
+    //     }
+    // }
 
-    wattron(curWin, COLOR_PAIR(3));
+    curWin = newwin(rows, cols, y, x);
+    // scrollok(curWin, TRUE);
+    // curWin = newwin(static_cast<int>(contentVec.size()) + 2, maxContentLength + 2, x, y);
+
+    wattron(curWin, COLOR_PAIR(0));
     printWindowContent();
-    wattroff(curWin, COLOR_PAIR(3));
+    wattroff(curWin, COLOR_PAIR(0));
 
     wattron(curWin, COLOR_PAIR(boxColorPair));
     box(curWin, ACS_VLINE, ACS_HLINE);
     wattroff(curWin, COLOR_PAIR(boxColorPair));
 
-    wattron(curWin, COLOR_PAIR(3));
+    wattron(curWin, COLOR_PAIR(0));
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
-    wattroff(curWin, COLOR_PAIR(3));
+    wattroff(curWin, COLOR_PAIR(0));
 
     return curWin;
 }
@@ -70,37 +77,37 @@ void TextWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int boxColo
     if (_rows != rows || _cols != cols || _x != x || _y == y) {
         rows = _rows, cols = _cols;
         wresize(curWin, rows, cols);
-        mvwin(curWin, x, y);
+        mvwin(curWin, y, x);
     }
 
-    wattron(curWin, COLOR_PAIR(3));
+    wattron(curWin, COLOR_PAIR(0));
     printWindowContent();
-    wattroff(curWin, COLOR_PAIR(3));
+    wattroff(curWin, COLOR_PAIR(0));
 
     wattron(curWin, COLOR_PAIR(boxColorPair));
     box(curWin, ACS_VLINE, ACS_HLINE);
     wattroff(curWin, COLOR_PAIR(boxColorPair));
 
-    wattron(curWin, COLOR_PAIR(3));
+    wattron(curWin, COLOR_PAIR(0));
     mvwprintw(curWin, 0, 6, " %s ", title.c_str());
-    wattroff(curWin, COLOR_PAIR(3));
+    wattroff(curWin, COLOR_PAIR(0));
 
-    wnoutrefresh(curWin);
+    // wnoutrefresh(curWin);
 }
 
 void TextWindow::handleKeyEvent() {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
-            case 'k' :
+            case 'k':
                 scrollUp();
                 break;
-            case 'j' :
+            case 'j':
                 scrollDown();
                 break;
-            case 'r' :
+            case 'r':
                 return;
-            case 'q' :
+            case 'q':
                 return;
         }
     }
@@ -125,20 +132,29 @@ void TextWindow::scrollDown() {
 }
 
 void TextWindow::printWindowContent() const {
-    int startOfLine = 0;
-    int line = 0;
-    int linesToPrint = 0;
+    // int startOfLine = 0;
+    // int line = 0;
+    // int linesToPrint = 0;
+    //
+    // for (int i = 0; i <= contentLength && linesToPrint < rows - 4; ++i) {
+    //     if (content[i] == '\n' || i - startOfLine == cols - 6 || contentLength - i == 0) {
+    //         if (line >= startLine) {
+    //             string temp = content.substr(startOfLine, i - startOfLine);
+    //             mvwprintw(curWin, linesToPrint++ + 2, 3, "%s", temp.c_str());
+    //         }
+    //         ++line;
+    //         while (content[i] == '\n' || content[i] == ' ') ++i;
+    //         startOfLine = i;
+    //     }
+    // }
 
-    for (int i = 0; i <= contentLength && linesToPrint < rows - 4; ++i) {
-        if (content[i] == '\n' || i - startOfLine == cols - 6 || contentLength - i == 0) {
-            if (line >= startLine) {
-                string temp = content.substr(startOfLine, i - startOfLine);
-                mvwprintw(curWin, linesToPrint++ + 2, 3, "%s", temp.c_str());
-            }
-            ++line;
-            while (content[i] == '\n' || content[i] == ' ') ++i;
-            startOfLine = i;
-        }
+    if (!content.empty()) {
+        mvwprintw(curWin, 1, 1, content.c_str());
+        return;
+    }
+
+    for (int i = 0; i < contentVec.size(); ++i) {
+        mvwprintw(curWin, i + 1, 1, contentVec[i].c_str());
     }
 }
 

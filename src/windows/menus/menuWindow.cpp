@@ -13,7 +13,7 @@ WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPa
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
 
-    curWin = newwin(rows, cols, x, y);
+    curWin = newwin(rows, cols, y, x);
     refresh();
 
     wattron(curWin, COLOR_PAIR(4));

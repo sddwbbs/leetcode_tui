@@ -53,7 +53,7 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
     init_pair(4, COLOR_CYAN, COLOR_BLACK);
     init_pair(5, COLOR_BLACK, COLOR_CYAN);
 
-    curWin = newwin(rows, cols, x, y);
+    curWin = newwin(rows, cols, y, x);
     wnoutrefresh(curWin);
 
     wattron(curWin, COLOR_PAIR(4));

@@ -4,19 +4,17 @@ WINDOW *SearchBarWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     if (curWin != nullptr) return curWin;
     rows = _rows, cols = _cols, x = _x, y = _y;
 
-    curWin = newwin(rows, cols, x, y);
-    scrollok(curWin, TRUE);
+    curWin = newwin(rows, cols, y, x);
+    refresh();
+    // scrollok(curWin, TRUE);
 
-    wattron(curWin, COLOR_PAIR(3));
-    wattroff(curWin, COLOR_PAIR(3));
-
-    wattron(curWin, COLOR_PAIR(4));
+    wattron(curWin, COLOR_PAIR(0));
     box(curWin, ACS_VLINE, ACS_HLINE);
-    wattroff(curWin, COLOR_PAIR(4));
+    wattroff(curWin, COLOR_PAIR(0));
 
-    wattron(curWin, COLOR_PAIR(3));
+    wattron(curWin, COLOR_PAIR(0));
     mvwprintw(curWin, 0, 6, " %s ", " Search ");
-    wattroff(curWin, COLOR_PAIR(3));
+    wattroff(curWin, COLOR_PAIR(0));
 
     return curWin;
 }
@@ -63,13 +61,13 @@ searchBarCodes SearchBarWindow::handleKeyEvent() {
         }
 
         werase(curWin);
-        wattron(curWin, COLOR_PAIR(4));
+        wattron(curWin, COLOR_PAIR(0));
         box(curWin, ACS_VLINE, ACS_HLINE);
-        wattroff(curWin, COLOR_PAIR(4));
+        wattroff(curWin, COLOR_PAIR(0));
 
-        wattron(curWin, COLOR_PAIR(3));
-        mvwprintw(curWin, 0, 6, " %s %s ", "\U0001F50D", " Search ");
-        wattroff(curWin, COLOR_PAIR(3));
+        wattron(curWin, COLOR_PAIR(0));
+        mvwprintw(curWin, 0, 6, " %s ", " Search ");
+        wattroff(curWin, COLOR_PAIR(0));
 
         mvwprintw(curWin, 1, 2, "%s", searchText.c_str());
         wrefresh(curWin);

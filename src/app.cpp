@@ -18,7 +18,7 @@ bool App::isTableExists(pqxx::connection &conn, const string &tableName) {
     try {
         pqxx::work txn(conn);
         string query = "SELECT EXISTS (SELECT FROM information_schema.tables "
-                            "WHERE table_schema = 'public' AND table_name = '" + tableName + "');";
+                       "WHERE table_schema = 'public' AND table_name = '" + tableName + "');";
 
         const pqxx::result result = txn.exec(query);
 
@@ -60,27 +60,22 @@ void App::startApp() {
     setlocale(LC_ALL, "en_US.UTF-8");
     initscr();
     start_color();
+    use_default_colors();
     initColors();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     noecho();
-    curs_set(0);
+    curs_set(FALSE);
 
-    int rows, cols;
-    getmaxyx(stdscr, rows, cols);
+    getmaxyx(stdscr, totalRows, totalCols);
 
     try {
-        if (const char *runningInDocker = std::getenv("RUNNING_IN_DOCKER"); runningInDocker != nullptr)
-            RUNNING_IN_DOCKER = true;
-        else
-            RUNNING_IN_DOCKER = false;
-
         if (bool configLoaded = Config::getConfig(); !configLoaded) {
             string title = "Warning";
-            string content = "Please check the correctness of the config.conf file";
+            string content = "Please check the correctness of the config file";
             TextWindow warningWindow(title, content);
-            WINDOW *warningWin = warningWindow.drawWindow(10, 80, rows / 2 - 5, cols / 2 - 40, 4);
+            WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_ROWS / 2 - 5, TOTAL_COLS / 2 - 40, 4);
             wrefresh(warningWin);
             std::this_thread::sleep_for(std::chrono::seconds(5));
             endwin();
@@ -93,7 +88,7 @@ void App::startApp() {
                 string title = "Warning";
                 string content = "DATABASE_URL environment variable is not set";
                 TextWindow warningWindow(title, content);
-                WINDOW *warningWin = warningWindow.drawWindow(10, 80, rows / 2 - 5, cols / 2 - 40, 4);
+                WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_ROWS / 2 - 5, TOTAL_COLS / 2 - 40, 4);
                 wrefresh(warningWin);
                 std::this_thread::sleep_for(std::chrono::seconds(5));
                 endwin();
@@ -143,33 +138,46 @@ void App::startApp() {
         task = std::make_shared<Task>(*conn);
         taskPtr = &*task;
 
-        WINDOW *mainWin = MainWindow::drawWindow(rows, cols, 0, 0);
-        MainMenuWindow mainMenuWindow(mainWin, {
-                                          "Open Nvim        ", "Open Daily Task  ", "Open Tasks List  ",
-                                          "Search           "
-                                      });
-        WINDOW *mainMenuWin = mainMenuWindow.drawWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
+        string statsStr = "STATS";
+        string tempStr = " Here will be user stats";
+        TextWindow userStatsWindow(statsStr, tempStr);
+        WINDOW *userStatsWin = userStatsWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
 
-        wrefresh(mainWin);
+        MainMenuWindow mainMenuWindow(stdscr, {
+                                          "Here will be the task   ",
+                                          "Task lists              ",
+                                          "Search                  ",
+                                      });
+        WINDOW *mainMenuWin = mainMenuWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
+                                                        5 + TOTAL_COLS / 2 - 5 + 1,
+                                                        TOTAL_ROWS / 4,
+                                                        4, 5);
+
+        wrefresh(stdscr);
+        wrefresh(userStatsWin);
         wrefresh(mainMenuWin);
 
         while (true) {
             menuCodes curCode = mainMenuWindow.handleKeyEvent(taskPtr);
             if (curCode == menuCodes::quit) break;
             if (curCode == menuCodes::refreshWin) {
-                MainWindow::refreshWindow(rows, cols, 0, 0);
-                mainMenuWindow.refreshWindow(8, 30, rows / 2 - 4, cols / 2 - 15, 2, 5);
-                wattron(mainWin, COLOR_PAIR(2));
+                userStatsWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
+                mainMenuWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
+                                             5 + TOTAL_COLS/ 2 - 5 + 1,
+                                             TOTAL_ROWS / 4,
+                                             4, 5);
+                wattron(stdscr, COLOR_PAIR(0));
                 if (mainMenuWindow.getCurItem() == 1) {
-                    mvwprintw(mainWin, rows - 2, 3,
+                    mvwprintw(stdscr, TOTAL_ROWS - 2, 3,
                               "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
                     if (!mainMenuWindow.getRefreshCodeSnippetStatus())
-                        mvwprintw(mainWin, rows / 2 - 1, cols / 2 + 16,
+                        mvwprintw(stdscr, TOTAL_ROWS / 2 - 1, TOTAL_COLS / 2 + 16,
                                   "'Enter' to Run or Submit");
                 }
-                wattroff(mainWin, COLOR_PAIR(2));
-                wnoutrefresh(mainWin);
+                wattroff(stdscr, COLOR_PAIR(0));
+                wnoutrefresh(stdscr);
                 wnoutrefresh(mainMenuWin);
+                wnoutrefresh(userStatsWin);
                 doupdate();
             }
         }
@@ -177,6 +185,5 @@ void App::startApp() {
         endwin();
     } catch (std::exception const &e) {
         std::cerr << "ERROR: " << e.what() << '\n';
-        return;
     }
 }

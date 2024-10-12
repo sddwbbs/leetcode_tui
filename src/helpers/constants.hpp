@@ -4,9 +4,15 @@
 
 using std::string;
 
-const static string SCRIPTS_PATH_DOCKER = "/usr/src/app/scripts/sql/";
-const static string SCRIPTS_PATH_LOCAL = "../scripts/sql/";
-const static string CONFIG_PATH_DOCKER = "/usr/src/app/config.conf";
-const static string CONFIG_PATH_LOCAL = "../config.conf";
+extern const string SCRIPTS_PATH_DOCKER;
+extern const string SCRIPTS_PATH_LOCAL;
+extern const string CONFIG_PATH_DOCKER;
+extern const string CONFIG_PATH_LOCAL;
 
-static bool RUNNING_IN_DOCKER;
+extern int totalRows;
+extern int totalCols;
+
+extern const int &TOTAL_ROWS;
+extern const int &TOTAL_COLS;
+
+extern bool RUNNING_IN_DOCKER;

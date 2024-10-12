@@ -42,6 +42,8 @@ public:
 
     MenuWindow &operator=(const MenuWindow &) = delete;
 
+    virtual ~MenuWindow() = default;
+
     explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
     explicit MenuWindow(WINDOW *parentWin);
