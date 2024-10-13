@@ -138,13 +138,21 @@ void App::startApp() {
         task = std::make_shared<Task>(*conn);
         taskPtr = &*task;
 
+        mvwprintw(stdscr, TOTAL_ROWS / 2, TOTAL_COLS / 2 - 5, "%s", "LOADING...");
+        wrefresh(stdscr);
+
         string statsStr = "STATS";
         string tempStr = " Here will be user stats";
         TextWindow userStatsWindow(statsStr, tempStr);
         WINDOW *userStatsWin = userStatsWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
 
+        // TODO: Make async
+        string dailyTitle = taskPtr->getDailyTask().title;
+
         MainMenuWindow mainMenuWindow(stdscr, {
-                                          "Here will be the task   ",
+                                          (dailyTitle.length() > TOTAL_COLS / 2 - 14)
+                                              ? dailyTitle.substr(0, TOTAL_COLS / 2 - 14) + "..."
+                                              : dailyTitle,
                                           "Task lists              ",
                                           "Search                  ",
                                       });
@@ -153,6 +161,7 @@ void App::startApp() {
                                                         TOTAL_ROWS / 4,
                                                         4, 5);
 
+        clear();
         wrefresh(stdscr);
         wrefresh(userStatsWin);
         wrefresh(mainMenuWin);
@@ -163,11 +172,11 @@ void App::startApp() {
             if (curCode == menuCodes::refreshWin) {
                 userStatsWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
                 mainMenuWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
-                                             5 + TOTAL_COLS/ 2 - 5 + 1,
+                                             5 + TOTAL_COLS / 2 - 5 + 1,
                                              TOTAL_ROWS / 4,
                                              4, 5);
                 wattron(stdscr, COLOR_PAIR(0));
-                if (mainMenuWindow.getCurItem() == 1) {
+                if (mainMenuWindow.getCurItemIdx() == 1) {
                     mvwprintw(stdscr, TOTAL_ROWS - 2, 3,
                               "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
                     if (!mainMenuWindow.getRefreshCodeSnippetStatus())

@@ -21,7 +21,6 @@ struct TaskData {
     string titleSlug;
     string title;
     string difficulty;
-    // string content;
     vector<string> content;
     json topicTags;
     json codeSnippets;
@@ -65,7 +64,7 @@ public:
 
     TaskData &getDailyTask();
 
-    TaskData &getSingleTask(string &titleSlug);
+    TaskData &getSingleTask(const string &titleSlug);
 
     [[nodiscard]] ResultData &runCode(bool isDaily, const string &langExt);
 

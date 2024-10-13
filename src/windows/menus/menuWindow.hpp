@@ -22,7 +22,8 @@ protected:
     WINDOW *curWin = nullptr;
     WINDOW *parentWin = nullptr;
     vector<string> menuItems;
-    int curItem = 0;
+    string menuTitle;
+    int curItemIdx = 0;
     int menuSize = 0;
     int rows = 0;
     int cols = 0;
@@ -44,9 +45,11 @@ public:
 
     virtual ~MenuWindow() = default;
 
+    explicit MenuWindow(WINDOW *parentWin);
+
     explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems);
 
-    explicit MenuWindow(WINDOW *parentWin);
+    explicit MenuWindow(WINDOW *parentWin, const vector<string> &menuItems, string menuTitle);
 
     virtual WINDOW *drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding);
 
@@ -54,7 +57,9 @@ public:
 
     [[nodiscard]] const char *getMenuItem(int index) const;
 
-    [[nodiscard]] int getCurItem() const;
+    [[nodiscard]] int getCurItemIdx() const;
+
+    [[nodiscard]] string getCurItem() const;
 
     [[nodiscard]] int getMenuSize() const;
 

@@ -27,7 +27,7 @@ WINDOW *MainMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _ro
     mvwhline(curWin, 6, 1, 0, cols - 2);
 
     for (int i = 0; i < menuSize; ++i) {
-        if (i == curItem) {
+        if (i == curItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
             mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
                       colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
@@ -41,7 +41,8 @@ WINDOW *MainMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _ro
     return curWin;
 }
 
-void MainMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+void MainMenuWindow::refreshWindow(const int _rows, const int _cols, const int _x, const int _y, const int _rowsPadding,
+                                   const int _colsPadding) {
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     wresize(curWin, rows, cols);
@@ -63,7 +64,7 @@ void MainMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _ro
     mvwhline(curWin, 6, 1, 0, cols - 2);
 
     for (int i = 0; i < menuSize; ++i) {
-        if (i == curItem) {
+        if (i == curItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
             mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
                       colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
@@ -80,7 +81,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k': {
-                if (curItem > 0) {
+                if (curItemIdx > 0) {
                     menuUp(2, 5);
                     return menuCodes::refreshWin;
                 }
@@ -88,7 +89,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'j': {
-                if (curItem < menuSize - 1) {
+                if (curItemIdx < menuSize - 1) {
                     menuDown(2, 5);
                     return menuCodes::refreshWin;
                 }
@@ -96,7 +97,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'r': {
-                if (curItem == 0) {
+                if (curItemIdx == 0) {
                     endwin();
                     system("w3m /tmp/temp.html");
                     return menuCodes::refreshWin;
@@ -105,23 +106,28 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'o': {
-                if (curItem == 0) {
+                if (curItemIdx == 0) {
                     if (refreshCodeSnippetStatus) {
                         std::ofstream myFileOutput;
                         string selectedLang;
                         string codeSnippet;
-                        int selectedLangIndex = -1;
+                        vector<string> langList;
 
-                        LanguageMenuWindow languageMenuWindow(curWin);
+                        json curTaskCodeSnippets = task->getDailyTask().codeSnippets;
+                        for (const auto &item:curTaskCodeSnippets) {
+                            langList.emplace_back(item["lang"]);
+                        }
+
+                        LanguageMenuWindow languageMenuWindow(curWin, langList);
                         WINDOW *languageMenuWin = languageMenuWindow.drawWindow(
-                            TOTAL_ROWS / 2 + TOTAL_ROWS / 4, TOTAL_COLS / 4,
-                            TOTAL_ROWS / 6, TOTAL_COLS / 2 - (TOTAL_COLS / 8), 2, 5);
+                            26, TOTAL_COLS / 6,
+                            TOTAL_COLS / 2 - TOTAL_COLS / 12, TOTAL_ROWS / 2 - TOTAL_ROWS / 4 - 2, 3, 5);
                         wrefresh(languageMenuWin);
 
                         while (true) {
                             menuCodes curCode = languageMenuWindow.handleKeyEvent();
                             if (curCode == menuCodes::itemSelected) {
-                                selectedLangIndex = languageMenuWindow.getCurItem();
+                                selectedLang = languageMenuWindow.getCurItem();
                                 break;
                             }
                             if (curCode == menuCodes::quit) break;
@@ -129,11 +135,13 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                                 wrefresh(languageMenuWin);
                         }
 
-                        if (selectedLangIndex == -1)
+                        if (selectedLang.empty()) {
+                            clear();
                             return menuCodes::refreshWin;
-                        selectedLang = lang[selectedLangIndex];
-                        auto pos = languageMenuWindow.langExtMap.find(selectedLang);
-                        if (pos != languageMenuWindow.langExtMap.end())
+                        }
+
+                        if (auto pos = languageMenuWindow.langExtMap.find(selectedLang);
+                            pos != languageMenuWindow.langExtMap.end())
                             langExt = pos->second;
 
                         for (const auto &item: task->getDailyTask().codeSnippets) {
@@ -159,7 +167,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'c': {
-                if (curItem == 1) {
+                if (curItemIdx == 1) {
                     refreshCodeSnippetStatus = true;
                     return menuCodes::refreshWin;
                 }
@@ -168,7 +176,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
 
             case 10: {
                 // Enter
-                if (curItem == 0 && !refreshCodeSnippetStatus) {
+                if (curItemIdx == 0 && !refreshCodeSnippetStatus) {
                     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
                     WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, TOTAL_ROWS / 2, TOTAL_COLS / 2 + 18, 1,
                                                                         1);
@@ -184,20 +192,15 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     return menuCodes::refreshWin;
                 }
 
-                if (curItem == 2) {
+                if (curItemIdx == 2) {
                     clear();
                     wrefresh(parentWin);
 
                     SearchBarWindow searchBarWindow;
-                    // WINDOW *searchBarWin = searchBarWindow.drawWindow(3, TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8, 2,
-                    //                                                   (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2);
                     WINDOW *searchBarWin = searchBarWindow.drawWindow(3, TOTAL_COLS - 10, 5, 3);
                     wrefresh(searchBarWin);
 
                     SearchResultsMenuWindow searchResultsMenuWindow(curWin, (TOTAL_ROWS / 2 + TOTAL_ROWS / 4) - 4);
-                    // WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(
-                    //     TOTAL_ROWS / 2 + TOTAL_ROWS / 4, TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8, 5,
-                    //     (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2, 2, 2);
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(
                         15, 60, 2, 7, 2, 2);
                     wrefresh(searchResultMenuWin);

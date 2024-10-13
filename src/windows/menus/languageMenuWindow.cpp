@@ -1,19 +1,19 @@
 #include "languageMenuWindow.hpp"
 
-LanguageMenuWindow::LanguageMenuWindow(WINDOW *parentWin)
-        : MenuWindow(parentWin, lang) {}
+LanguageMenuWindow::LanguageMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
+        : MenuWindow(parentWin, menuItems, "SELECT LANGUAGE") {}
 
 menuCodes LanguageMenuWindow::handleKeyEvent() {
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
-                if (curItem > 0) menuUp(2, 5);
+                if (curItemIdx > 0) menuUp(rowsPadding, colsPadding);
                 return menuCodes::refreshWin;
             }
 
             case 'j' : {
-                if (curItem < menuSize - 1) menuDown(2, 5);
+                if (curItemIdx < menuSize - 1) menuDown(rowsPadding, colsPadding);
                 return menuCodes::refreshWin;
             }
 

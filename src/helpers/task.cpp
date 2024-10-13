@@ -18,18 +18,6 @@ string Task::exec(const char* cmd) const {
 }
 
 void Task::htmlToPlainText(const string& htmlContent) {
-    // const char* tempFile = "/tmp/temp.html";
-    // std::ofstream out(tempFile);
-    // out << html;
-    // out.close();
-    //
-    // string command = "elinks -dump " + string(tempFile);
-    // string plainText = exec(command.c_str());
-    //
-    // std::remove(tempFile);
-    //
-    // return plainText;
-
     const string tempHtmlFile = "/tmp/temp.html";
     const string tempTxtFile = "/tmp/temp.txt";
 
@@ -142,7 +130,6 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
             singleTask.titleSlug = row["title_slug"].as<string>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-            // singleTask.content = row["content"].as<string>();
 
             singleTask.content.clear();
             std::stringstream ss(row["content"].as<string>());
@@ -168,7 +155,6 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
             singleTask.frontendId = row["frontend_id"].as<int>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-            // singleTask.content = row["content"].as<string>();
 
             singleTask.content.clear();
             std::stringstream ss(row["content"].as<string>());
@@ -187,9 +173,7 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
 }
 
 TaskData &Task::getDailyTask() {
-    std::time_t curTime = std::time(nullptr);
-    std::tm *timeInfo = std::localtime(&curTime);
-    std::tm *refreshDate = timeInfo;
+    const std::time_t curTime = std::time(nullptr);
 
     pqxx::work tx{conn};
 
@@ -219,9 +203,6 @@ TaskData &Task::getDailyTask() {
         singleTask.titleSlug = jsonDailyTask["titleSlug"].get<string>();
         singleTask.title = jsonDailyTask["title"].get<string>();
         singleTask.difficulty = jsonDailyTask["difficulty"].get<string>();
-        // singleTask.content = jsonDailyTask["content"].get<string>();
-        //
-        // singleTask.content = htmlToPlainText(singleTask.content);
 
         const string htmlContent = jsonDailyTask["content"].get<string>();
         htmlToPlainText(htmlContent);
@@ -242,7 +223,7 @@ TaskData &Task::getDailyTask() {
     return singleTask;
 }
 
-TaskData &Task::getSingleTask(string &titleSlug) {
+TaskData &Task::getSingleTask(const string &titleSlug) {
     pqxx::work tx{conn};
 
     singleTask.titleSlug = titleSlug;
@@ -262,9 +243,6 @@ TaskData &Task::getSingleTask(string &titleSlug) {
         singleTask.frontendId = std::stoi(jsonSingleTask["frontendId"].get<string>());
         singleTask.title = jsonSingleTask["title"].get<string>();
         singleTask.difficulty = jsonSingleTask["difficulty"].get<string>();
-        // singleTask.content = jsonSingleTask["content"].get<string>();
-        //
-        // singleTask.content = htmlToPlainText(singleTask.content);
 
         const string htmlContent = jsonSingleTask["content"].get<string>();
         htmlToPlainText(htmlContent);
