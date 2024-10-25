@@ -155,6 +155,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                         myFileOutput << codeSnippet;
                         myFileOutput.close();
                         refreshCodeSnippetStatus = false;
+                        clear();
                     }
 
                     string command = "nvim dailyTask." + langExt;
@@ -167,7 +168,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'c': {
-                if (curItemIdx == 1) {
+                if (curItemIdx == 0) {
                     refreshCodeSnippetStatus = true;
                     return menuCodes::refreshWin;
                 }

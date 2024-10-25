@@ -162,6 +162,10 @@ void App::startApp() {
                                                         4, 5);
 
         clear();
+
+        mvwprintw(stdscr, TOTAL_ROWS - 2, 3,
+                  "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
+
         wrefresh(stdscr);
         wrefresh(userStatsWin);
         wrefresh(mainMenuWin);
@@ -176,12 +180,15 @@ void App::startApp() {
                                              TOTAL_ROWS / 4,
                                              4, 5);
                 wattron(stdscr, COLOR_PAIR(0));
-                if (mainMenuWindow.getCurItemIdx() == 1) {
-                    mvwprintw(stdscr, TOTAL_ROWS - 2, 3,
-                              "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet");
+                string message = "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet";
+                if (mainMenuWindow.getCurItemIdx() == 0) {
+                    mvwprintw(stdscr, TOTAL_ROWS - 2, 3, message.c_str());
                     if (!mainMenuWindow.getRefreshCodeSnippetStatus())
                         mvwprintw(stdscr, TOTAL_ROWS / 2 - 1, TOTAL_COLS / 2 + 16,
                                   "'Enter' to Run or Submit");
+                } else {
+                    string emptyLine(message.length(), ' ');
+                    mvwprintw(stdscr, TOTAL_ROWS - 2, 3, emptyLine.c_str());
                 }
                 wattroff(stdscr, COLOR_PAIR(0));
                 wnoutrefresh(stdscr);
