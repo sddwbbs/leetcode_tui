@@ -1,7 +1,7 @@
-#include "searchResultsMenuWindow.hpp"
+#include "tasksMenuWindow.hpp"
 
 SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin, const int menuItemsLimit)
-        : MenuWindow(parentWin), menuItemsLimit(menuItemsLimit) {
+    : MenuWindow(parentWin), menuItemsLimit(menuItemsLimit) {
     string emptyStr;
     menuItems = searchTasks(emptyStr);
     menuSize = menuItems.size();
@@ -19,7 +19,6 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
             string frontendId = question["frontendQuestionId"];
             titleSlugMap[std::stoi(frontendId)] = question["titleSlug"];
             string title = question["title"];
-            string difficulty = question["difficulty"];
             string status;
             if (!question["status"].is_null()) {
                 if (question["status"] == "ac") status = "Solved";
@@ -32,10 +31,9 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
 
             stringstream ss;
             ss << std::setw(idWidth) << std::left << frontendId << " "
-               << std::setw(titleWidth) << std::left << title << " "
-               << std::setw(difficultyWidth) << difficulty << " "
-               << std::setw(statusWidth) << status << " "
-               << std::setw(paidOnlyWidth) << paidOnly;
+                    << std::setw(titleWidth) << std::left << title << " "
+                    << std::setw(statusWidth) << status << " "
+                    << std::setw(paidOnlyWidth) << paidOnly;
             string questionStr = ss.str();
             items.push_back(questionStr);
         } else break;
@@ -56,16 +54,14 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
     curWin = newwin(rows, cols, y, x);
     wnoutrefresh(curWin);
 
-    wattron(curWin, COLOR_PAIR(4));
+    wattron(curWin, COLOR_PAIR(0));
     box(curWin, ACS_VLINE, ACS_HLINE);
-    wattroff(curWin, COLOR_PAIR(4));
+    wattroff(curWin, COLOR_PAIR(0));
 
-    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s%s%-*s",
+    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s",
               idWidth, "ID",
               " ",
               titleWidth, "TITLE",
-              " ",
-              difficultyWidth, "DIFFICULTY",
               " ",
               statusWidth, "STATUS",
               " ",
@@ -85,8 +81,7 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
 
     mvwvline(curWin, 1, idWidth + 1, ACS_VLINE, rows - 2);
     mvwvline(curWin, 1, idWidth + titleWidth + 2, ACS_VLINE, rows - 2);
-    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + 3, ACS_VLINE, rows - 2);
-    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + statusWidth + 3, ACS_VLINE, rows - 2);
 
     return curWin;
 }
@@ -96,14 +91,14 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     wresize(curWin, rows, cols);
-    mvwin(curWin, x, y);
+    mvwin(curWin, y, x);
     werase(curWin);
 
-    wattron(curWin, COLOR_PAIR(4));
+    wattron(curWin, COLOR_PAIR(0));
     box(curWin, 0, 0);
-    wattroff(curWin, COLOR_PAIR(4));
+    wattroff(curWin, COLOR_PAIR(0));
 
-    wattron(stdscr, COLOR_PAIR(2));
+    wattron(stdscr, COLOR_PAIR(0));
     int parentRows, parendCols;
     getmaxyx(stdscr, parentRows, parendCols);
     const string emptyLine(parendCols - 4, ' ');
@@ -115,22 +110,20 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
         mvwprintw(stdscr, parentRows - 2, 3, "%s",
                   "Press 'r' to read the task | 'o' to open it in nvim | 'c' to refresh code snippet | 'Enter' to Run or Submit");
     }
-    wattroff(stdscr, COLOR_PAIR(2));
+    wattroff(stdscr, COLOR_PAIR(0));
 
     if (context == Context::nothingFound) {
-        wattron(stdscr, COLOR_PAIR(2));
+        wattron(stdscr, COLOR_PAIR(0));
         mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
-        wattroff(stdscr, COLOR_PAIR(2));
+        wattroff(stdscr, COLOR_PAIR(0));
         wnoutrefresh(curWin);
         return;
     }
 
-    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s%s%-*s",
+    mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s",
               idWidth, "ID",
               " ",
               titleWidth, "TITLE",
-              " ",
-              difficultyWidth, "DIFFICULTY",
               " ",
               statusWidth, "STATUS",
               " ",
@@ -154,8 +147,7 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
 
     mvwvline(curWin, 1, idWidth + 1, ACS_VLINE, rows - 2);
     mvwvline(curWin, 1, idWidth + titleWidth + 2, ACS_VLINE, rows - 2);
-    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + 3, ACS_VLINE, rows - 2);
-    mvwvline(curWin, 1, idWidth + titleWidth + difficultyWidth + statusWidth + 4, ACS_VLINE, rows - 2);
+    mvwvline(curWin, 1, idWidth + titleWidth + statusWidth + 3, ACS_VLINE, rows - 2);
 
     wnoutrefresh(curWin);
     doupdate();
@@ -180,7 +172,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
     int ch;
     while ((ch = getch()) != 27) {
         switch (ch) {
-            case 'k' : {
+            case 'k': {
                 if (curItemIdx > 0) {
                     menuUp(rowsPadding, colsPadding);
                     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
@@ -188,7 +180,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 break;
             }
 
-            case 'j' : {
+            case 'j': {
                 if (curItemIdx < menuSize - 1) {
                     menuDown(rowsPadding, colsPadding);
                     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
@@ -196,43 +188,43 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 break;
             }
 
-            case 'r' : {
-                string emptyStr = "Wait";
-                string loadingStr = "Loading...";
-                TextWindow loadingWindow(emptyStr, loadingStr);
-                WINDOW *loadingWin = loadingWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                              y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
-                wrefresh(loadingWin);
-
-                int curItem = getCurItemIdx();
-                string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
-                string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
-
-                if (menuItems[curItem].find("\U0001F512") != string::npos) {
-                    string content = "This task is paid only :(";
-                    titleSlug += " \U0001F512";
-                    TextWindow taskTextWindow(titleSlug, content);
-                    WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
-                    wrefresh(taskTextWin);
-
-                    taskTextWindow.handleKeyEvent();
-                } else {
-                    TextWindow taskTextWindow(task->getSingleTask(titleSlug).title,
-                                              task->getSingleTask(titleSlug).content);
-                    WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                    y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
-                    wrefresh(taskTextWin);
-
-                    taskTextWindow.handleKeyEvent();
-                }
-                werase(loadingWin);
-
-                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+            case 'r': {
+                // string emptyStr = "Wait";
+                // string loadingStr = "Loading...";
+                // TextWindow loadingWindow(emptyStr, loadingStr);
+                // WINDOW *loadingWin = loadingWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                //                                               y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
+                // wrefresh(loadingWin);
+                //
+                // int curItem = getCurItemIdx();
+                // string frontendId = menuItems[curItem].substr(0, menuItems[curItem].find(' '));
+                // string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
+                //
+                // if (menuItems[curItem].find("\U0001F512") != string::npos) {
+                //     string content = "This task is paid only :(";
+                //     titleSlug += " \U0001F512";
+                //     TextWindow taskTextWindow(titleSlug, content);
+                //     WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                //                                                     y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
+                //     wrefresh(taskTextWin);
+                //
+                //     taskTextWindow.handleKeyEvent();
+                // } else {
+                //     TextWindow taskTextWindow(task->getSingleTask(titleSlug).title,
+                //                               task->getSingleTask(titleSlug).content);
+                //     WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                //                                                     y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
+                //     wrefresh(taskTextWin);
+                //
+                //     taskTextWindow.handleKeyEvent();
+                // }
+                // werase(loadingWin);
+                //
+                // refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::refreshWin;
             }
 
-            case 'o' : {
+            case 'o': {
                 if (refreshCodeSnippetStatus || getCurItemIdx() != selectedItem) {
                     if (menuItems[curItemIdx].find("\U0001F512") != string::npos) {
                         string frontendId = menuItems[curItemIdx].substr(0, menuItems[curItemIdx].find(' '));
@@ -255,7 +247,6 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                     string codeSnippet;
 
                     //TODO: Make list of tasks
-
                     LanguageMenuWindow languageMenuWindow(curWin, {"hello"});
                     WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
                                                                             x + 1, y + cols / 2 - (cols / 8), 2, 5);
@@ -277,7 +268,6 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
 
                     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
 
-                    // selectedLang = lang[languageMenuWindow.getCurItemIdx()];
                     selectedLang = "C++";
                     auto pos = languageMenuWindow.langExtMap.find(selectedLang);
                     if (pos != languageMenuWindow.langExtMap.end())
@@ -307,7 +297,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 return menuCodes::refreshWin;
             }
 
-            case 'c' : {
+            case 'c': {
                 if (!refreshCodeSnippetStatus && getCurItemIdx() == selectedItem) {
                     selectedItem = -1;
                     refreshCodeSnippetStatus = true;
@@ -316,10 +306,11 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 return menuCodes::refreshWin;
             }
 
-            case '\n' : {
+            case '\n': {
                 if (!refreshCodeSnippetStatus && getCurItemIdx() == selectedItem) {
                     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
-                    WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, x + getCurItemIdx() + 1, cols / 2 + cols / 4, 1, 1);
+                    WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, x + getCurItemIdx() + 1,
+                                                                        cols / 2 + cols / 4, 1, 1);
                     wrefresh(launchMenuWin);
 
                     while (true) {
@@ -335,7 +326,7 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 return menuCodes::refreshWin;
             }
 
-            case 'q' : {
+            case 'q': {
                 return menuCodes::quit;
             }
         }

@@ -193,6 +193,16 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     return menuCodes::refreshWin;
                 }
 
+                if (curItemIdx == 1) {
+                    clear();
+                    wrefresh(parentWin);
+
+
+
+
+                    return menuCodes::refreshWin;
+                }
+
                 if (curItemIdx == 2) {
                     clear();
                     wrefresh(parentWin);
@@ -201,15 +211,15 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     WINDOW *searchBarWin = searchBarWindow.drawWindow(3, TOTAL_COLS - 10, 5, 3);
                     wrefresh(searchBarWin);
 
-                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, (TOTAL_ROWS / 2 + TOTAL_ROWS / 4) - 4);
+                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, (TOTAL_ROWS - 8) - 4);
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(
-                        15, 60, 2, 7, 2, 2);
+                        TOTAL_ROWS - 8, TOTAL_COLS - 10, 5, 6, 2, 2);
                     wrefresh(searchResultMenuWin);
 
-                    int cursorOffset = (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2 + 2;
+                    int cursorOffset = (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2 - 2;
                     while (true) {
                         curs_set(1);
-                        wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
+                        wmove(stdscr, 4, cursorOffset + searchBarWindow.getSearchText().length());
                         searchBarCodes curSbCode = searchBarWindow.handleKeyEvent();
                         curs_set(0);
 

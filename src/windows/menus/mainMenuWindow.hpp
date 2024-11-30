@@ -7,7 +7,7 @@
 #include "launchMenuWindow.hpp"
 #include "languageMenuWindow.hpp"
 #include "../searchBarWindow.hpp"
-#include "searchResultsMenuWindow.hpp"
+#include "tasksMenuWindow.hpp"
 #include "../../helpers/requests/questionListRequest.hpp"
 
 #include <fstream>

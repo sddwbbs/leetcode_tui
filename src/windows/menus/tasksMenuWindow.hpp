@@ -22,19 +22,18 @@ enum class Context : int {
     standard
 };
 
-class SearchResultsMenuWindow : public MenuWindow {
+class SearchResultsMenuWindow final : public MenuWindow {
     vector<string> searchTasks(string &searchText);
 
     unordered_map<int, string> titleSlugMap;
     bool refreshCodeSnippetStatus = true;
     int selectedItem = -1;
+    int menuItemsLimit = 0;
     string langExt;
-    const int idWidth = 6;// 8
-    const int titleWidth = 54; //50
-    const int difficultyWidth = 15;//10
-    const int statusWidth = 11;
-    const int paidOnlyWidth = 10;
-    const int menuItemsLimit = 0;
+    const int idWidth = TOTAL_COLS / 20;
+    const int titleWidth = TOTAL_COLS / 2 + TOTAL_COLS / 20;
+    const int statusWidth = TOTAL_COLS / 5;
+    const int paidOnlyWidth = TOTAL_COLS / 20;
 
 public:
     SearchResultsMenuWindow() = default;

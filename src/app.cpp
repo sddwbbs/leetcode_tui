@@ -146,14 +146,14 @@ void App::startApp() {
         TextWindow userStatsWindow(statsStr, tempStr);
         WINDOW *userStatsWin = userStatsWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
 
-        // TODO: Make async
+        //TODO: Make async
         string dailyTitle = taskPtr->getDailyTask().title;
 
         MainMenuWindow mainMenuWindow(stdscr, {
                                           (dailyTitle.length() > TOTAL_COLS / 2 - 14)
                                               ? dailyTitle.substr(0, TOTAL_COLS / 2 - 14) + "..."
                                               : dailyTitle,
-                                          "Task lists              ",
+                                          "LeetCode patterns       ",
                                           "Search                  ",
                                       });
         WINDOW *mainMenuWin = mainMenuWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
