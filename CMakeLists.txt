@@ -31,8 +31,8 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/requests/runCodeRequests.hpp
         src/windows/searchBarWindow.cpp
         src/windows/searchBarWindow.hpp
-        src/windows/menus/searchResultsMenuWindow.cpp
-        src/windows/menus/searchResultsMenuWindow.hpp
+        src/windows/menus/tasksMenuWindow.cpp
+        src/windows/menus/tasksMenuWindow.hpp
         src/helpers/requests/questionListRequest.cpp
         src/helpers/requests/questionListRequest.hpp
         src/helpers/requests/singleTaskRequest.cpp
@@ -42,4 +42,4 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/constants.cpp
 )
 
-target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)
+target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncursesw curl pqxx pq)

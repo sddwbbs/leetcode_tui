@@ -4,6 +4,8 @@
 #include <vector>
 #include <pqxx/pqxx>
 #include <string>
+#include <utility>
+#include <stack>
 
 #include "../../helpers/task.hpp"
 
@@ -16,15 +18,21 @@ enum class menuCodes : int {
 
 using std::vector;
 using std::string;
+using std::stack;
 
 class MenuWindow {
 protected:
     WINDOW *curWin = nullptr;
     WINDOW *parentWin = nullptr;
+    int selectedItemIdx = 0;
+    int pageNumber = 0;
+    int pageLimit = 0;
+    stack<int> pageLastIdxs;
+    stack<int> beginIdxs;
     vector<string> menuItems;
     string menuTitle;
-    int curItemIdx = 0;
-    int menuSize = 0;
+    int beginOfDisplayedItemsIdx = 0;
+    int endOfDisplayedItemsIdx = 0;
     int rows = 0;
     int cols = 0;
     int x = 0;
@@ -35,6 +43,10 @@ protected:
     void menuUp(int _rowsPadding, int _colsPadding);
 
     void menuDown(int _rowsPadding, int _colsPadding);
+
+    void scrollUp();
+
+    void scrollDown();
 
 public:
     MenuWindow(const MenuWindow &) = delete;
@@ -57,11 +69,11 @@ public:
 
     [[nodiscard]] const char *getMenuItem(int index) const;
 
-    [[nodiscard]] int getCurItemIdx() const;
-
     [[nodiscard]] string getCurItem() const;
 
     [[nodiscard]] int getMenuSize() const;
+
+    [[nodiscard]] int getCurItemIdx() const;
 
     virtual menuCodes handleKeyEvent();
 };

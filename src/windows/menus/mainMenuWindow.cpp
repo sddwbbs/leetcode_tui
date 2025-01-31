@@ -1,5 +1,7 @@
 #include "mainMenuWindow.hpp"
 
+#include <thread>
+
 MainMenuWindow::MainMenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
     : MenuWindow(parentWin, menuItems) {
 }
@@ -21,20 +23,20 @@ WINDOW *MainMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _ro
     wattroff(curWin, COLOR_PAIR(0));
 
     wattron(curWin, A_BOLD | COLOR_PAIR(0));
-    mvwprintw(curWin, 2, colsPadding, "%s", "Daily Task");
+    mvwprintw(curWin, 2, colsPadding, "%s", "\U0001F525 Daily Task");
     wattroff(curWin, A_BOLD | COLOR_PAIR(0));
 
     mvwhline(curWin, 6, 1, 0, cols - 2);
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == curItemIdx) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
-                      colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
+            mvwprintw(curWin, (curElemIdx == 0) ? curElemIdx + rowsPadding : curElemIdx + rowsPadding + 3,
+                      colsPadding, (curElemIdx == 0) ? "%s" : "- %s", menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
-                      colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
+            mvwprintw(curWin, (curElemIdx == 0) ? curElemIdx + rowsPadding : curElemIdx + rowsPadding + 3,
+                      colsPadding, (curElemIdx == 0) ? "%s" : "- %s", menuItems[curElemIdx].c_str());
         }
     }
 
@@ -58,20 +60,20 @@ void MainMenuWindow::refreshWindow(const int _rows, const int _cols, const int _
     wattroff(curWin, COLOR_PAIR(0));
 
     wattron(curWin, A_BOLD | COLOR_PAIR(0));
-    mvwprintw(curWin, 2, colsPadding, "%s", "Daily Task");
+    mvwprintw(curWin, 2, colsPadding, "%s", "\U0001F525 Daily Task");
     wattroff(curWin, A_BOLD | COLOR_PAIR(0));
 
     mvwhline(curWin, 6, 1, 0, cols - 2);
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == curItemIdx) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
-                      colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
+            mvwprintw(curWin, (curElemIdx == 0) ? curElemIdx + rowsPadding : curElemIdx + rowsPadding + 3,
+                      colsPadding, (curElemIdx == 0) ? "%s" : "- %s", menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, (i == 0) ? i + rowsPadding : i + rowsPadding + 3,
-                      colsPadding, (i == 0) ? "%s" : "- %s", menuItems[i].c_str());
+            mvwprintw(curWin, (curElemIdx == 0) ? curElemIdx + rowsPadding : curElemIdx + rowsPadding + 3,
+                      colsPadding, (curElemIdx == 0) ? "%s" : "- %s", menuItems[curElemIdx].c_str());
         }
     }
 }
@@ -81,32 +83,30 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k': {
-                if (curItemIdx > 0) {
-                    menuUp(2, 5);
-                    return menuCodes::refreshWin;
-                }
+                menuUp(2, 5);
+                return menuCodes::refreshWin;
             }
             break;
 
             case 'j': {
-                if (curItemIdx < menuSize - 1) {
-                    menuDown(2, 5);
-                    return menuCodes::refreshWin;
-                }
+                menuDown(2, 5);
+                return menuCodes::refreshWin;
             }
             break;
 
             case 'r': {
-                if (curItemIdx == 0) {
+                if (selectedItemIdx == 0) {
                     endwin();
-                    system("w3m /tmp/temp.html");
+                    system("w3m -o display_image=1 /tmp/temp.html; clear");
+                    initscr();
                     return menuCodes::refreshWin;
                 }
+                return menuCodes::ok;
             }
             break;
 
             case 'o': {
-                if (curItemIdx == 0) {
+                if (selectedItemIdx == 0) {
                     if (refreshCodeSnippetStatus) {
                         std::ofstream myFileOutput;
                         string selectedLang;
@@ -168,7 +168,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
             break;
 
             case 'c': {
-                if (curItemIdx == 0) {
+                if (selectedItemIdx == 0) {
                     refreshCodeSnippetStatus = true;
                     return menuCodes::refreshWin;
                 }
@@ -177,7 +177,7 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
 
             case 10: {
                 // Enter
-                if (curItemIdx == 0 && !refreshCodeSnippetStatus) {
+                if (selectedItemIdx == 0 && !refreshCodeSnippetStatus) {
                     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
                     WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, TOTAL_ROWS / 2, TOTAL_COLS / 2 + 18, 1,
                                                                         1);
@@ -193,7 +193,17 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     return menuCodes::refreshWin;
                 }
 
-                if (curItemIdx == 2) {
+                if (selectedItemIdx == 1) {
+                    clear();
+                    wrefresh(parentWin);
+
+
+
+
+                    return menuCodes::refreshWin;
+                }
+
+                if (selectedItemIdx == 2) {
                     clear();
                     wrefresh(parentWin);
 
@@ -201,15 +211,15 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                     WINDOW *searchBarWin = searchBarWindow.drawWindow(3, TOTAL_COLS - 10, 5, 3);
                     wrefresh(searchBarWin);
 
-                    SearchResultsMenuWindow searchResultsMenuWindow(curWin, (TOTAL_ROWS / 2 + TOTAL_ROWS / 4) - 4);
+                    SearchResultsMenuWindow searchResultsMenuWindow(curWin);
                     WINDOW *searchResultMenuWin = searchResultsMenuWindow.drawWindow(
-                        15, 60, 2, 7, 2, 2);
+                        TOTAL_ROWS - 8, TOTAL_COLS - 10, 5, 6, 3, 2);
                     wrefresh(searchResultMenuWin);
 
-                    int cursorOffset = (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2 + 2;
+                    int cursorOffset = (TOTAL_COLS - (TOTAL_COLS / 2 + TOTAL_COLS / 4 + TOTAL_COLS / 8)) / 2 - 2;
                     while (true) {
                         curs_set(1);
-                        wmove(stdscr, 3, cursorOffset + searchBarWindow.getSearchText().length());
+                        wmove(stdscr, 4, cursorOffset + searchBarWindow.getSearchText().length());
                         searchBarCodes curSbCode = searchBarWindow.handleKeyEvent();
                         curs_set(0);
 

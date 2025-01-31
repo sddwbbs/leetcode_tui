@@ -13,7 +13,7 @@ WINDOW *SearchBarWindow::drawWindow(int _rows, int _cols, int _x, int _y) {
     wattroff(curWin, COLOR_PAIR(0));
 
     wattron(curWin, COLOR_PAIR(0));
-    mvwprintw(curWin, 0, 6, " %s ", " Search ");
+    mvwprintw(curWin, 0, 6, " %s ", " Search \U0001F50E ");
     wattroff(curWin, COLOR_PAIR(0));
 
     return curWin;
@@ -66,7 +66,7 @@ searchBarCodes SearchBarWindow::handleKeyEvent() {
         wattroff(curWin, COLOR_PAIR(0));
 
         wattron(curWin, COLOR_PAIR(0));
-        mvwprintw(curWin, 0, 6, " %s ", " Search ");
+        mvwprintw(curWin, 0, 6, " %s ", " Search \U0001F50E ");
         wattroff(curWin, COLOR_PAIR(0));
 
         mvwprintw(curWin, 1, 2, "%s", searchText.c_str());

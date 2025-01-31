@@ -138,23 +138,23 @@ void App::startApp() {
         task = std::make_shared<Task>(*conn);
         taskPtr = &*task;
 
-        mvwprintw(stdscr, TOTAL_ROWS / 2, TOTAL_COLS / 2 - 5, "%s", "LOADING...");
+        mvwprintw(stdscr, TOTAL_ROWS / 2, TOTAL_COLS / 2 - 5, "%s", "\U0000231B LOADING...");
         wrefresh(stdscr);
 
-        string statsStr = "STATS";
+        string statsStr = "\U0001F4CA STATS";
         string tempStr = " Here will be user stats";
         TextWindow userStatsWindow(statsStr, tempStr);
         WINDOW *userStatsWin = userStatsWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
 
-        // TODO: Make async
+        //TODO: Make async
         string dailyTitle = taskPtr->getDailyTask().title;
 
         MainMenuWindow mainMenuWindow(stdscr, {
                                           (dailyTitle.length() > TOTAL_COLS / 2 - 14)
                                               ? dailyTitle.substr(0, TOTAL_COLS / 2 - 14) + "..."
                                               : dailyTitle,
-                                          "Task lists              ",
-                                          "Search                  ",
+                                          "LeetCode patterns       ",
+                                          "Search \U0001F50E               ",
                                       });
         WINDOW *mainMenuWin = mainMenuWindow.drawWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
                                                         5 + TOTAL_COLS / 2 - 5 + 1,
@@ -175,6 +175,7 @@ void App::startApp() {
             if (curCode == menuCodes::quit) break;
             if (curCode == menuCodes::refreshWin) {
                 userStatsWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5, 5, TOTAL_ROWS / 4, 0);
+                //TODO: maybe unnecessary
                 mainMenuWindow.refreshWindow(TOTAL_ROWS / 2 + 5, TOTAL_COLS / 2 - 5,
                                              5 + TOTAL_COLS / 2 - 5 + 1,
                                              TOTAL_ROWS / 4,

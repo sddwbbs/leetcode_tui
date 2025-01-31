@@ -1,6 +1,6 @@
 #pragma once
 
-#include "menus/searchResultsMenuWindow.hpp"
+#include "menus/tasksMenuWindow.hpp"
 
 #include <ncurses.h>
 #include <string>

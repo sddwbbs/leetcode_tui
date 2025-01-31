@@ -19,27 +19,30 @@ using std::unordered_map;
 
 enum class Context : int {
     nothingFound,
-    standard
+    standard,
+    scroll
 };
 
-class SearchResultsMenuWindow : public MenuWindow {
-    vector<string> searchTasks(string &searchText);
+class SearchResultsMenuWindow final : public MenuWindow {
+    vector<string> getTasks(string &searchText, bool doScroll);
 
-    unordered_map<int, string> titleSlugMap;
+    unordered_map<int, string> *titleSlugMap;
+    vector<json> *questionList;
+    string emptyStr;
     bool refreshCodeSnippetStatus = true;
     int selectedItem = -1;
     string langExt;
-    const int idWidth = 6;// 8
-    const int titleWidth = 54; //50
-    const int difficultyWidth = 15;//10
-    const int statusWidth = 11;
-    const int paidOnlyWidth = 10;
-    const int menuItemsLimit = 0;
+    const int idWidth = TOTAL_COLS / 20;
+    const int titleWidth = TOTAL_COLS / 2 + TOTAL_COLS / 20;
+    const int statusWidth = TOTAL_COLS / 5;
+    const int paidOnlyWidth = TOTAL_COLS / 20;
 
 public:
-    SearchResultsMenuWindow() = default;
+    SearchResultsMenuWindow() = delete;
 
-    explicit SearchResultsMenuWindow(WINDOW *grandParentWin, int menuItemsLimit);
+    ~SearchResultsMenuWindow() override;
+
+    explicit SearchResultsMenuWindow(WINDOW *grandParentWin);
 
     WINDOW *drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) override;
 
