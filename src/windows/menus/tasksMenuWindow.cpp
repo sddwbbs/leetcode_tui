@@ -1,23 +1,33 @@
 #include "tasksMenuWindow.hpp"
 
-SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *parentWin, const int menuItemsLimit)
-    : MenuWindow(parentWin), menuItemsLimit(menuItemsLimit) {
-    string emptyStr;
-    menuItems = searchTasks(emptyStr);
-    menuSize = menuItems.size();
+SearchResultsMenuWindow::SearchResultsMenuWindow(WINDOW *grandParentWin)
+    : MenuWindow(grandParentWin)
+      , titleSlugMap(new(unordered_map<int, string>))
+      , questionList(new(vector<json>)) {
 }
 
-vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
-    if (!titleSlugMap.empty())
-        titleSlugMap.clear();
-    vector<json> questionList = QuestionListRequest::getQuestionList(searchText);
+SearchResultsMenuWindow::~SearchResultsMenuWindow() {
+    delete titleSlugMap;
+    delete questionList;
+}
+
+vector<string> SearchResultsMenuWindow::getTasks(string &searchText, const bool doScroll) {
+    if (!titleSlugMap->empty())
+        titleSlugMap->clear();
+
+    if (doScroll == false) *questionList = QuestionListRequest::getQuestionList(searchText);
     vector<string> items;
 
+    pageLimit = static_cast<int>(questionList->size()) / (rows - 4);
+    if (static_cast<int>(questionList->size()) % (rows - 4) != 0)
+        ++pageLimit;
+
     int i = 0;
-    for (const auto &question: questionList) {
-        if (i < menuItemsLimit) {
+    for (const auto &question: *questionList) {
+        if (i >= beginOfDisplayedItemsIdx && i < beginOfDisplayedItemsIdx + rows - 4) {
             string frontendId = question["frontendQuestionId"];
-            titleSlugMap[std::stoi(frontendId)] = question["titleSlug"];
+            (*titleSlugMap)[std::stoi(frontendId)] = question["titleSlug"];
+
             string title = question["title"];
             string status;
             if (!question["status"].is_null()) {
@@ -26,8 +36,7 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
             }
 
             string paidOnly;
-            if (question["paidOnly"] == true)
-                paidOnly = "\U0001F512";
+            paidOnly = question["paidOnly"] ? "  \U0001F512   " : "   ";
 
             stringstream ss;
             ss << std::setw(idWidth) << std::left << frontendId << " "
@@ -36,7 +45,7 @@ vector<string> SearchResultsMenuWindow::searchTasks(string &searchText) {
                     << std::setw(paidOnlyWidth) << paidOnly;
             string questionStr = ss.str();
             items.push_back(questionStr);
-        } else break;
+        }
         ++i;
     }
 
@@ -58,6 +67,9 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
     box(curWin, ACS_VLINE, ACS_HLINE);
     wattroff(curWin, COLOR_PAIR(0));
 
+    string emptyStr;
+    menuItems = getTasks(emptyStr, false);
+
     mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s",
               idWidth, "ID",
               " ",
@@ -69,13 +81,15 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
 
     mvwhline(curWin, 2, colsPadding, ACS_HLINE, cols - 2 * colsPadding);
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == curItemIdx) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
         }
     }
 
@@ -87,7 +101,7 @@ WINDOW *SearchResultsMenuWindow::drawWindow(int _rows, int _cols, int _x, int _y
 }
 
 void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding,
-                                            Context context) {
+                                            const Context context) {
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
     wresize(curWin, rows, cols);
@@ -103,7 +117,7 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
     getmaxyx(stdscr, parentRows, parendCols);
     const string emptyLine(parendCols - 4, ' ');
     mvwprintw(stdscr, parentRows - 2, 3, "%s", emptyLine.c_str());
-    if (getCurItemIdx() != selectedItem) {
+    if (selectedItemIdx != selectedItem) {
         mvwprintw(stdscr, parentRows - 2, 3, "%s",
                   "Press 'r' to read the task | 'o' to open it in nvim ");
     } else {
@@ -120,6 +134,11 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
         return;
     }
 
+    if (context == Context::scroll) {
+        string emptyStr;
+        menuItems = getTasks(emptyStr, true);
+    }
+
     mvwprintw(curWin, 1, colsPadding, "%-*s%s%-*s%s%-*s%s%-*s",
               idWidth, "ID",
               " ",
@@ -131,17 +150,20 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
 
     mvwhline(curWin, 2, colsPadding, ACS_HLINE, cols - 2 * colsPadding);
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == selectedItem) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItem) {
             wattron(curWin, COLOR_PAIR(6));
-            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(6));
-        } else if (i == curItemIdx) {
+        } else if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, i + 1 + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
         }
     }
 
@@ -155,17 +177,15 @@ void SearchResultsMenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y
 
 menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string searchText, Task *task) {
     if (isRequestRequired) {
-        menuItems = searchTasks(searchText);
-        curItemIdx = 0;
+        menuItems = getTasks(searchText, false);
+        selectedItemIdx = 0;
         if (menuItems.empty()) {
-            menuSize = 0;
             wclear(curWin);
             refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::nothingFound);
-            mvwprintw(curWin, 3, 4, "%s", "NOTHING FOUND");
+            mvwprintw(curWin, 3, 4, "%s", "NOTHING FOUND \U0001F61E");
             wnoutrefresh(curWin);
             return menuCodes::quit;
         }
-        menuSize = menuItems.size();
         refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
     }
 
@@ -173,20 +193,28 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k': {
-                if (curItemIdx > 0) {
-                    menuUp(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                if (selectedItemIdx == 0) {
+                    scrollUp();
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::scroll);
+                    break;
                 }
-                break;
+                else
+                    menuUp(rowsPadding, colsPadding);
+                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
             }
+            break;
 
             case 'j': {
-                if (curItemIdx < menuSize - 1) {
-                    menuDown(rowsPadding, colsPadding);
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                if (selectedItemIdx == menuItems.size() - 1) {
+                    scrollDown();
+                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::scroll);
+                    break;
                 }
-                break;
+                else
+                    menuDown(rowsPadding, colsPadding);
+                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
             }
+            break;
 
             case 'r': {
                 // string emptyStr = "Wait";
@@ -223,112 +251,119 @@ menuCodes SearchResultsMenuWindow::handleKeyEvent(bool isRequestRequired, string
                 // refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::refreshWin;
             }
+            break;
 
             case 'o': {
-                if (refreshCodeSnippetStatus || getCurItemIdx() != selectedItem) {
-                    if (menuItems[curItemIdx].find("\U0001F512") != string::npos) {
-                        string frontendId = menuItems[curItemIdx].substr(0, menuItems[curItemIdx].find(' '));
-                        string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
-                        string content = "This task is paid only :(";
-                        titleSlug += " \U0001F512";
-                        TextWindow taskTextWindow(titleSlug, content);
-                        WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
-                                                                        y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
-                        wrefresh(taskTextWin);
-
-                        taskTextWindow.handleKeyEvent();
-
-                        refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                        return menuCodes::refreshWin;
-                    }
-
-                    std::ofstream myFileOutput;
-                    string selectedLang;
-                    string codeSnippet;
-
-                    //TODO: Make list of tasks
-                    LanguageMenuWindow languageMenuWindow(curWin, {"hello"});
-                    WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
-                                                                            x + 1, y + cols / 2 - (cols / 8), 2, 5);
-                    wrefresh(languageMenuWin);
-
-                    while (true) {
-                        menuCodes curCode = languageMenuWindow.handleKeyEvent();
-                        if (curCode == menuCodes::itemSelected) break;
-                        if (curCode == menuCodes::quit) {
-                            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                            return menuCodes::refreshWin;
-                        }
-                        if (curCode == menuCodes::refreshWin)
-                            wrefresh(languageMenuWin);
-                    }
-
-                    selectedItem = getCurItemIdx();
-                    refreshCodeSnippetStatus = false;
-
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-
-                    selectedLang = "C++";
-                    auto pos = languageMenuWindow.langExtMap.find(selectedLang);
-                    if (pos != languageMenuWindow.langExtMap.end())
-                        langExt = pos->second;
-
-                    string frontendId = menuItems[selectedItem].substr(0, menuItems[selectedItem].find(' '));
-                    string titleSlug = titleSlugMap.find(std::stoi(frontendId))->second;
-
-                    for (const auto &item: task->getSingleTask(titleSlug).codeSnippets) {
-                        if (item["lang"] == selectedLang) {
-                            codeSnippet = item["code"];
-                            break;
-                        }
-                    }
-
-                    myFileOutput.open("singleTask." + langExt);
-                    myFileOutput << codeSnippet;
-                    myFileOutput.close();
-                }
-
-                string command = "nvim singleTask." + langExt;
-                system(command.c_str());
-                endwin();
-                initscr();
-
-                refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                // if (refreshCodeSnippetStatus || getRelativeIdx() != selectedItem) {
+                //     if (menuItems[absoluteItemIdx].find("\U0001F512") != string::npos) {
+                //         string frontendId = menuItems[absoluteItemIdx].substr(0, menuItems[absoluteItemIdx].find(' '));
+                //         string titleSlug = titleSlugMap->find(std::stoi(frontendId))->second;
+                //         string content = "This task is paid only :(";
+                //         titleSlug += " \U0001F512";
+                //         TextWindow taskTextWindow(titleSlug, content);
+                //         WINDOW *taskTextWin = taskTextWindow.drawWindow(rows - 2, cols / 2 + cols / 8, x + 1,
+                //                                                         y + cols / 2 - (cols / 2 + cols / 8) / 2, 3);
+                //         wrefresh(taskTextWin);
+                //
+                //         taskTextWindow.handleKeyEvent();
+                //
+                //         refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                //         return menuCodes::refreshWin;
+                //     }
+                //
+                //     std::ofstream myFileOutput;
+                //     string selectedLang;
+                //     string codeSnippet;
+                //
+                //     //TODO: Make list of tasks
+                //     LanguageMenuWindow languageMenuWindow(curWin, {"hello"});
+                //     WINDOW *languageMenuWin = languageMenuWindow.drawWindow(rows - 2, cols / 4,
+                //                                                             x + 1, y + cols / 2 - (cols / 8), 2, 5);
+                //     wrefresh(languageMenuWin);
+                //
+                //     while (true) {
+                //         menuCodes curCode = languageMenuWindow.handleKeyEvent();
+                //         if (curCode == menuCodes::itemSelected) break;
+                //         if (curCode == menuCodes::quit) {
+                //             refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                //             return menuCodes::refreshWin;
+                //         }
+                //         if (curCode == menuCodes::refreshWin)
+                //             wrefresh(languageMenuWin);
+                //     }
+                //
+                //     selectedItem = getRelativeIdx();
+                //     refreshCodeSnippetStatus = false;
+                //
+                //     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                //
+                //     selectedLang = "C++";
+                //     auto pos = languageMenuWindow.langExtMap.find(selectedLang);
+                //     if (pos != languageMenuWindow.langExtMap.end())
+                //         langExt = pos->second;
+                //
+                //     string frontendId = menuItems[selectedItem].substr(0, menuItems[selectedItem].find(' '));
+                //     string titleSlug = titleSlugMap->find(std::stoi(frontendId))->second;
+                //
+                //     for (const auto &item: task->getSingleTask(titleSlug).codeSnippets) {
+                //         if (item["lang"] == selectedLang) {
+                //             codeSnippet = item["code"];
+                //             break;
+                //         }
+                //     }
+                //
+                //     myFileOutput.open("singleTask." + langExt);
+                //     myFileOutput << codeSnippet;
+                //     myFileOutput.close();
+                // }
+                //
+                // string command = "nvim singleTask." + langExt;
+                // system(command.c_str());
+                // endwin();
+                // initscr();
+                //
+                // refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
                 return menuCodes::refreshWin;
             }
+            break;
 
             case 'c': {
-                if (!refreshCodeSnippetStatus && getCurItemIdx() == selectedItem) {
-                    selectedItem = -1;
-                    refreshCodeSnippetStatus = true;
-                    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                }
+                // if (!refreshCodeSnippetStatus && getRelativeIdx() == selectedItem) {
+                //     selectedItem = -1;
+                //     refreshCodeSnippetStatus = true;
+                //     refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                // }
                 return menuCodes::refreshWin;
             }
+            break;
 
             case '\n': {
-                if (!refreshCodeSnippetStatus && getCurItemIdx() == selectedItem) {
-                    LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
-                    WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, x + getCurItemIdx() + 1,
-                                                                        cols / 2 + cols / 4, 1, 1);
-                    wrefresh(launchMenuWin);
-
-                    while (true) {
-                        menuCodes curCode = launchMenuWindow.handleKeyEvent(task, false, langExt);
-                        if (curCode == menuCodes::quit) {
-                            refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
-                            return menuCodes::refreshWin;
-                        }
-                        if (curCode == menuCodes::refreshWin)
-                            wrefresh(launchMenuWin);
-                    }
-                }
+                // if (!refreshCodeSnippetStatus && getRelativeIdx() == selectedItem) {
+                //     LaunchMenuWindow launchMenuWindow(curWin, {"  Run     ", "  Submit  "});
+                //     WINDOW *launchMenuWin = launchMenuWindow.drawWindow(4, 12, x + getRelativeIdx() + 1,
+                //                                                         cols / 2 + cols / 4, 1, 1);
+                //     wrefresh(launchMenuWin);
+                //
+                //     while (true) {
+                //         menuCodes curCode = launchMenuWindow.handleKeyEvent(task, false, langExt);
+                //         if (curCode == menuCodes::quit) {
+                //             refreshWindow(rows, cols, x, y, rowsPadding, colsPadding, Context::standard);
+                //             return menuCodes::refreshWin;
+                //         }
+                //         if (curCode == menuCodes::refreshWin)
+                //             wrefresh(launchMenuWin);
+                //     }
+                // }
                 return menuCodes::refreshWin;
             }
+            break;
 
             case 'q': {
                 return menuCodes::quit;
             }
+            break;
+
+            default: break;
         }
     }
 

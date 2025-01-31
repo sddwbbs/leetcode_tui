@@ -42,4 +42,4 @@ add_executable(leetcode_tui src/main.cpp
         src/helpers/constants.cpp
 )
 
-target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncurses curl pqxx pq)
+target_link_libraries(leetcode_tui PRIVATE cpr::cpr ncursesw curl pqxx pq)

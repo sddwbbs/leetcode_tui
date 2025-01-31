@@ -8,12 +8,12 @@ menuCodes LanguageMenuWindow::handleKeyEvent() {
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
-                if (curItemIdx > 0) menuUp(rowsPadding, colsPadding);
+                menuUp(rowsPadding, colsPadding);
                 return menuCodes::refreshWin;
             }
 
             case 'j' : {
-                if (curItemIdx < menuSize - 1) menuDown(rowsPadding, colsPadding);
+                menuDown(rowsPadding, colsPadding);
                 return menuCodes::refreshWin;
             }
 

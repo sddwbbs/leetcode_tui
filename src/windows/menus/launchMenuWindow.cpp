@@ -8,17 +8,17 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task, bool isDaily, const strin
     while ((ch = getch()) != 27) {
         switch (ch) {
             case 'k' : {
-                if (curItemIdx > 0) menuUp(1, 1);
+                menuUp(1, 1);
                 return menuCodes::refreshWin;
             }
 
             case 'j' : {
-                if (curItemIdx < menuSize - 1) menuDown(1, 1);
+                menuDown(1, 1);
                 return menuCodes::refreshWin;
             }
 
             case 10 : {
-                if (curItemIdx == 0) {
+                if (selectedItemIdx == 0) {
                     ResultData resultData = task->runCode(isDaily, langExt);
                     string title;
                     bool isCompileError = false;
@@ -65,6 +65,8 @@ menuCodes LaunchMenuWindow::handleKeyEvent(Task *task, bool isDaily, const strin
             case 'q' : {
                 return menuCodes::quit;
             }
+
+            default: break;
         }
     }
 
