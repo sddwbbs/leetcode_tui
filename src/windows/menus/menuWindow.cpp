@@ -1,22 +1,18 @@
 #include "menuWindow.hpp"
 
-// #include <utility>
-
 MenuWindow::MenuWindow(WINDOW *parentWin)
     : parentWin(parentWin) {
 }
 
 MenuWindow::MenuWindow(WINDOW *parentWin, const vector<string> &menuItems)
     : parentWin(parentWin)
-      , menuItems(menuItems)
-      , menuSize(static_cast<int>(menuItems.size())) {
+      , menuItems(menuItems) {
 }
 
 MenuWindow::MenuWindow(WINDOW *parentWin, const vector<string> &menuItems, string menuTitle)
     : parentWin(parentWin)
       , menuItems(menuItems)
-      , menuTitle(std::move(menuTitle))
-      , menuSize(static_cast<int>(menuItems.size())) {
+      , menuTitle(std::move(menuTitle)) {
 }
 
 WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
@@ -37,13 +33,15 @@ WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPa
         wattroff(curWin, COLOR_PAIR(0));
     }
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == curItemIdx) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, i + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, i + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
         }
     }
 
@@ -51,10 +49,19 @@ WINDOW *MenuWindow::drawWindow(int _rows, int _cols, int _x, int _y, int _rowsPa
 }
 
 void MenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPadding, int _colsPadding) {
+    bool somethingChanged = false;
+    if (_rows != rows || _cols != cols || _x != x || _y != y || _rowsPadding != rowsPadding || _colsPadding !=
+        colsPadding)
+        somethingChanged = true;
+
     rows = _rows, cols = _cols, x = _x, y = _y;
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
-    wresize(curWin, rows, cols);
-    mvwin(curWin, x, y);
+
+    if (somethingChanged) {
+        wresize(curWin, rows, cols);
+        mvwin(curWin, x, y);
+    }
+
     werase(curWin);
 
     wattron(curWin, COLOR_PAIR(0));
@@ -67,46 +74,90 @@ void MenuWindow::refreshWindow(int _rows, int _cols, int _x, int _y, int _rowsPa
         wattroff(curWin, COLOR_PAIR(0));
     }
 
-    for (int i = 0; i < menuSize; ++i) {
-        if (i == curItemIdx) {
+    for (int curElemIdx = 0; curElemIdx < menuItems.size(); ++curElemIdx) {
+        if (curElemIdx == selectedItemIdx) {
             wattron(curWin, COLOR_PAIR(5));
-            mvwprintw(curWin, i + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
             wattroff(curWin, COLOR_PAIR(5));
         } else {
-            mvwprintw(curWin, i + rowsPadding, colsPadding, "%s", menuItems[i].c_str());
+            mvwprintw(curWin, curElemIdx + rowsPadding, colsPadding, "%s",
+                      menuItems[curElemIdx].c_str());
         }
     }
 }
 
-const char *MenuWindow::getMenuItem(int index) const { return menuItems[index].c_str(); }
-
-int MenuWindow::getCurItemIdx() const { return curItemIdx; }
-
-string MenuWindow::getCurItem() const { return menuItems[curItemIdx]; }
-
-int MenuWindow::getMenuSize() const { return menuSize; }
-
-void MenuWindow::menuUp(int _rowsPadding, int _colsPadding) {
+void MenuWindow::menuUp(const int _rowsPadding, const int _colsPadding) {
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
-    mvwprintw(curWin, curItemIdx + rowsPadding, colsPadding, "%s", menuItems[curItemIdx].c_str());
-    --curItemIdx;
+
+    if (selectedItemIdx == 0) return;
+
+    mvwprintw(curWin, selectedItemIdx + rowsPadding, colsPadding, "%s",
+              menuItems[selectedItemIdx].c_str());
+    --selectedItemIdx;
+
     wattron(curWin, COLOR_PAIR(5));
-    mvwprintw(curWin, curItemIdx + rowsPadding, colsPadding, "%s", menuItems[curItemIdx].c_str());
+    mvwprintw(curWin, selectedItemIdx + rowsPadding, colsPadding, "%s",
+              menuItems[selectedItemIdx].c_str());
     wattroff(curWin, COLOR_PAIR(5));
 
+    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
     wnoutrefresh(curWin);
 }
 
-void MenuWindow::menuDown(int _rowsPadding, int _colsPadding) {
+void MenuWindow::menuDown(const int _rowsPadding, const int _colsPadding) {
     rowsPadding = _rowsPadding, colsPadding = _colsPadding;
-    mvwprintw(curWin, curItemIdx + rowsPadding, colsPadding, "%s", menuItems[curItemIdx].c_str());
-    ++curItemIdx;
+
+    if (selectedItemIdx == menuItems.size() - 1) return;
+
+    mvwprintw(curWin, selectedItemIdx + rowsPadding, colsPadding, "%s",
+              menuItems[selectedItemIdx].c_str());
+    ++selectedItemIdx;
+
     wattron(curWin, COLOR_PAIR(5));
-    mvwprintw(curWin, curItemIdx + rowsPadding, colsPadding, "%s", menuItems[curItemIdx].c_str());
+    mvwprintw(curWin, selectedItemIdx + rowsPadding, colsPadding, "%s",
+              menuItems[selectedItemIdx].c_str());
     wattroff(curWin, COLOR_PAIR(5));
 
+    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
     wnoutrefresh(curWin);
 }
+
+void MenuWindow::scrollUp() {
+    if (pageNumber == 0) return;
+
+    if (!pageLastIdxs.empty()) {
+        selectedItemIdx = pageLastIdxs.top();
+        pageLastIdxs.pop();
+    }
+    if (!beginIdxs.empty()) {
+        beginOfDisplayedItemsIdx = beginIdxs.top();
+        beginIdxs.pop();
+    }
+    if (pageNumber - 1 >= 0) --pageNumber;
+    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+    wnoutrefresh(curWin);
+}
+
+void MenuWindow::scrollDown() {
+    if (pageNumber == pageLimit - 1) return;
+
+    pageLastIdxs.push(selectedItemIdx);
+    beginIdxs.push(beginOfDisplayedItemsIdx);
+    beginOfDisplayedItemsIdx += static_cast<int>(menuItems.size());
+    selectedItemIdx = 0;
+    ++pageNumber;
+    refreshWindow(rows, cols, x, y, rowsPadding, colsPadding);
+    wnoutrefresh(curWin);
+}
+
+const char *MenuWindow::getMenuItem(const int index) const { return menuItems[index].c_str(); }
+
+string MenuWindow::getCurItem() const { return menuItems[selectedItemIdx]; }
+
+int MenuWindow::getMenuSize() const { return static_cast<int>(menuItems.size()); }
+
+int MenuWindow::getCurItemIdx() const { return selectedItemIdx; };
 
 menuCodes MenuWindow::handleKeyEvent() {
     return menuCodes::ok;
