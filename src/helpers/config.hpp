@@ -3,7 +3,7 @@
 #include "constants.hpp"
 
 #include <string>
-#include <fstream>
+#include <optional>
 
 using std::string;
 
@@ -16,48 +16,28 @@ class Config {
     static inline string hostaddr;
     static inline string port;
 
+    static std::optional<string> get_env(const char* env_var) {
+        const char* value = std::getenv(env_var);
+        return value ? std::optional<string>(value) : std::nullopt;
+    }
+
 public:
     static bool getConfig() {
-        string param;
-        std::ifstream configFile;
+        csrftoken       = get_env("LEETCODE_CSRFTOKEN").value_or("");
+        leetcodeSession = get_env("LEETCODE_SESSION").value_or("");
+        dbname          = get_env("LEETCODE_DBNAME").value_or("");
+        user            = get_env("LEETCODE_USER").value_or("");
+        password        = get_env("LEETCODE_PASSWORD").value_or("");
+        hostaddr        = get_env("LEETCODE_HOSTADDR").value_or("");
+        port            = get_env("LEETCODE_PORT").value_or("");
 
-        if (RUNNING_IN_DOCKER)
-            configFile.open(CONFIG_PATH_DOCKER);
-        else
-            configFile.open(CONFIG_PATH_LOCAL);
-
-        if (configFile.is_open()) {
-            while (std::getline(configFile, param)) {
-                if (param.empty() || param[0] == '[')
-                    continue;
-
-                switch(param[0]) {
-                    case 'd' : dbname = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
-                    case 'u' : user = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
-                    case 'p' : {
-                        if (param[1] == 'a')
-                            password = param.substr(param.find('=') + 1, param.length() - param.find('='));
-                        else
-                            port = param.substr(param.find('=') + 1, param.length() - param.find('='));
-                    } break;
-                    case 'h' : hostaddr = param.substr(param.find('=') + 1, param.length() - param.find('=')); break;
-                    case 'c' : csrftoken = param.substr(param.find('=')+ 1, param.length() - param.find('=')); break;
-                    case 'L' : leetcodeSession = param.substr(param.find('=') + 1, param.length() - param.find('='));
-                }
-            }
-
-            if (dbname.empty() ||
-                user.empty() ||
-                password.empty() ||
-                port.empty() ||
-                hostaddr.empty() ||
-                csrftoken.empty() ||
-                leetcodeSession.empty()) {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        if (csrftoken.empty()
+            || leetcodeSession.empty()
+            || dbname.empty()
+            || user.empty()
+            || password.empty()
+            || hostaddr.empty()
+            || port.empty()) return false;
 
         return true;
     }

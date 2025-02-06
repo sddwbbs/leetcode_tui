@@ -73,9 +73,9 @@ void App::startApp() {
     try {
         if (bool configLoaded = Config::getConfig(); !configLoaded) {
             string title = "Warning";
-            string content = "Please check the correctness of the config file";
+            string content = " Please check the correctness of the environment variables";
             TextWindow warningWindow(title, content);
-            WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_ROWS / 2 - 5, TOTAL_COLS / 2 - 40, 4);
+            WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_COLS / 2 - 40, TOTAL_ROWS / 2 - 5, 0);
             wrefresh(warningWin);
             std::this_thread::sleep_for(std::chrono::seconds(5));
             endwin();
@@ -86,9 +86,9 @@ void App::startApp() {
             const char *db_url = std::getenv("DATABASE_URL");
             if (db_url == nullptr) {
                 string title = "Warning";
-                string content = "DATABASE_URL environment variable is not set";
+                string content = " DATABASE_URL environment variable is not set";
                 TextWindow warningWindow(title, content);
-                WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_ROWS / 2 - 5, TOTAL_COLS / 2 - 40, 4);
+                WINDOW *warningWin = warningWindow.drawWindow(10, 80, TOTAL_ROWS / 2 - 5, TOTAL_COLS / 2 - 40, 0);
                 wrefresh(warningWin);
                 std::this_thread::sleep_for(std::chrono::seconds(5));
                 endwin();
