@@ -2,28 +2,33 @@
 
 #include <cpr/cpr.h>
 
+#include "../constants.hpp"
+
 json DailyTaskRequest::getAllData() {
     json result;
     json jsonResponse;
 
-    auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
-                              cpr::Header{{"Content-Type", "application/json"}},
-                              cpr::Body{"{\n"
-                                        "\t\"query\": \"\\n    query questionOfToday {\\n  activeDailyCodingChallengeQuestion {\\n      link\\n    question {\\n      acRate\\n      difficulty\\n      freqBar\\n      frontendQuestionId: questionFrontendId\\n      isFavor\\n      paidOnly: isPaidOnly\\n      status\\n      title\\n      titleSlug\\n          topicTags {\\n        name\\n        id\\n        slug\\n      }\\n    }\\n  }\\n}\\n    \",\n"
-                                        "\t\"variables\": {},\n"
-                                        "\t\"operationName\": \"questionOfToday\"\n"
-                                        "}"});
+    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
+        auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                                  cpr::Header{{"Content-Type", "application/json"}},
+                                  cpr::Body{"{\n"
+                                            "\t\"query\": \"\\n    query questionOfToday {\\n  activeDailyCodingChallengeQuestion {\\n      link\\n    question {\\n      acRate\\n      difficulty\\n      freqBar\\n      frontendQuestionId: questionFrontendId\\n      isFavor\\n      paidOnly: isPaidOnly\\n      status\\n      title\\n      titleSlug\\n          topicTags {\\n        name\\n        id\\n        slug\\n      }\\n    }\\n  }\\n}\\n    \",\n"
+                                            "\t\"variables\": {},\n"
+                                            "\t\"operationName\": \"questionOfToday\"\n"
+                                            "}"});
 
-    if (response.status_code == 200) {
-        jsonResponse = json::parse(response.text);
-        result["difficulty"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["difficulty"];
-        result["title"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["title"];
-        result["titleSlug"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["titleSlug"];
-        result["topicTags"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["topicTags"];
-        result["frontendId"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["frontendQuestionId"];
-        result["paidOnly"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["paidOnly"];
-    } else {
-        return json::parse("");
+        if (response.status_code == 200) {
+            jsonResponse = json::parse(response.text);
+            result["difficulty"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["difficulty"];
+            result["title"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["title"];
+            result["titleSlug"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["titleSlug"];
+            result["topicTags"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["topicTags"];
+            result["frontendId"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["frontendQuestionId"];
+            result["paidOnly"] = jsonResponse["data"]["activeDailyCodingChallengeQuestion"]["question"]["paidOnly"];
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_MS));
     }
 
     string titleSlug = result["titleSlug"];
@@ -35,15 +40,18 @@ json DailyTaskRequest::getAllData() {
                          "\t\"operationName\": \"questionContent\"\n"
                          "}";
 
-    response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
-                         cpr::Header{{"Content-Type", "application/json"}},
-                         cpr::Body{requestBody});
+    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
+        auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                                  cpr::Header{{"Content-Type", "application/json"}},
+                                  cpr::Body{requestBody});
 
-    if (response.status_code == 200) {
-        jsonResponse = json::parse(response.text);
-        result["content"] = jsonResponse["data"]["question"]["content"];
-    } else {
-        return json::parse("");
+        if (response.status_code == 200) {
+            jsonResponse = json::parse(response.text);
+            result["content"] = jsonResponse["data"]["question"]["content"];
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_MS));
     }
 
     requestBody = "{\n"
@@ -54,16 +62,19 @@ json DailyTaskRequest::getAllData() {
                   "\t\"operationName\": \"questionEditorData\"\n"
                   "}";
 
-    response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
-                         cpr::Header{{"Content-Type", "application/json"}},
-                         cpr::Body{requestBody});
+    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
+        auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                             cpr::Header{{"Content-Type", "application/json"}},
+                             cpr::Body{requestBody});
 
-    if (response.status_code == 200) {
-        jsonResponse = json::parse(response.text);
-        result["id"] = jsonResponse["data"]["question"]["questionId"];
-        result["codeSnippets"] = jsonResponse["data"]["question"]["codeSnippets"];
-    } else {
-        return json::parse("");
+        if (response.status_code == 200) {
+            jsonResponse = json::parse(response.text);
+            result["id"] = jsonResponse["data"]["question"]["questionId"];
+            result["codeSnippets"] = jsonResponse["data"]["question"]["codeSnippets"];
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_MS));
     }
 
     return result;

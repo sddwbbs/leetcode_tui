@@ -96,10 +96,8 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
 
             case 'r': {
                 if (selectedItemIdx == 0) {
-                    endwin();
-                    system("w3m -o display_image=1 /tmp/temp.html; clear");
-                    initscr();
-                    return menuCodes::refreshWin;
+                    task->getDailyTask();
+                    task->displayTask();
                 }
                 return menuCodes::ok;
             }
@@ -196,9 +194,6 @@ menuCodes MainMenuWindow::handleKeyEvent(Task *task) {
                 if (selectedItemIdx == 1) {
                     clear();
                     wrefresh(parentWin);
-
-
-
 
                     return menuCodes::refreshWin;
                 }

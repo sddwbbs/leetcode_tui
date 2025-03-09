@@ -1,42 +1,7 @@
 #include "task.hpp"
 
 Task::Task(pqxx::connection &conn)
-        : conn(conn) {}
-
-string Task::exec(const char* cmd) const {
-    std::array<char, 128> buffer{};
-    string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-
-    return result;
-}
-
-void Task::htmlToPlainText(const string& htmlContent) {
-    const string tempHtmlFile = "/tmp/temp.html";
-    const string tempTxtFile = "/tmp/temp.txt";
-
-    std::ofstream out(tempHtmlFile);
-    out << htmlContent;
-    out.close();
-
-    string command = "w3m -dump " + tempHtmlFile + " > " + tempTxtFile;
-    system(command.c_str());
-
-    std::ifstream in(tempTxtFile);
-    string line;
-
-    singleTask.content.clear();
-    while (getline(in, line)) {
-        this->singleTask.content.push_back(line);
-    }
-
-    in.close();
+    : conn(conn) {
 }
 
 void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
@@ -69,7 +34,7 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
         bool alreadyInTable = false;
         try {
             alreadyInTable = tx.query_value<bool>(
-                    "SELECT COUNT(*) FROM tasks WHERE id = " + std::to_string(singleTask.id));
+                "SELECT COUNT(*) FROM tasks WHERE id = " + std::to_string(singleTask.id));
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
         }
@@ -83,34 +48,24 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
             }
         } else {
             try {
-                string content;
-                for (const auto &elem : singleTask.content) {
-                    content += elem + '\n';
-                }
-
                 tx.exec_params(
-                        "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
-                        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-                        singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
-                        singleTask.difficulty, content, singleTask.topicTags.dump(),
-                        singleTask.codeSnippets.dump(), singleTask.paidOnly, refreshedTime);
+                    "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only, refresh_time) "
+                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                    singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
+                    singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
+                    singleTask.codeSnippets.dump(), singleTask.paidOnly, refreshedTime);
             } catch (std::exception const &e) {
                 std::cerr << "ERROR: " << e.what() << '\n';
             }
         }
     } else {
         try {
-            string content;
-            for (const auto &elem : singleTask.content) {
-                content += elem + '\n';
-            }
-
             tx.exec_params(
-                    "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only) "
-                    "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-                    singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
-                    singleTask.difficulty, content, singleTask.topicTags.dump(),
-                    singleTask.codeSnippets.dump(), singleTask.paidOnly);
+                "INSERT INTO tasks (id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only) "
+                "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+                singleTask.id, singleTask.frontendId, singleTask.titleSlug, singleTask.title,
+                singleTask.difficulty, singleTask.content, singleTask.topicTags.dump(),
+                singleTask.codeSnippets.dump(), singleTask.paidOnly);
         } catch (std::exception const &e) {
             std::cerr << "ERROR: " << e.what() << '\n';
         }
@@ -118,11 +73,11 @@ void Task::saveToDb(bool dailyInDb, pqxx::work &tx, bool isDaily) {
 }
 
 void Task::readFromDb(pqxx::work &tx, bool isDaily) {
-    if (isDaily) { 
+    if (isDaily) {
         try {
             pqxx::result result = tx.exec(
-                    "SELECT id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only "
-                    "FROM tasks WHERE refresh_time IS NOT NULL");
+                "SELECT id, frontend_id, title_slug, title, difficulty, content, topic_tags, code_snippets, paid_only "
+                "FROM tasks WHERE refresh_time IS NOT NULL");
 
             const auto &row = result.begin();
             singleTask.id = row["id"].as<int>();
@@ -130,14 +85,7 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
             singleTask.titleSlug = row["title_slug"].as<string>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-
-            singleTask.content.clear();
-            std::stringstream ss(row["content"].as<string>());
-            string line;
-            while (getline(ss, line)) {
-                singleTask.content.push_back(line);
-            }
-
+            singleTask.content = row["content"].as<string>();
             singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
             singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
             singleTask.paidOnly = row["paid_only"].as<bool>();
@@ -147,22 +95,15 @@ void Task::readFromDb(pqxx::work &tx, bool isDaily) {
     } else {
         try {
             pqxx::result result = tx.exec(
-                    "SELECT id, frontend_id, title, difficulty, content, topic_tags, code_snippets, paid_only "
-                    "FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
+                "SELECT id, frontend_id, title, difficulty, content, topic_tags, code_snippets, paid_only "
+                "FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
 
             const auto &row = result.begin();
             singleTask.id = row["id"].as<int>();
             singleTask.frontendId = row["frontend_id"].as<int>();
             singleTask.title = row["title"].as<string>();
             singleTask.difficulty = row["difficulty"].as<string>();
-
-            singleTask.content.clear();
-            std::stringstream ss(row["content"].as<string>());
-            string line;
-            while (getline(ss, line)) {
-                singleTask.content.push_back(line);
-            }
-
+            singleTask.content = row["content"].as<string>();
             singleTask.topicTags = json::parse(row["topic_tags"].as<string>());
             singleTask.codeSnippets = json::parse(row["code_snippets"].as<string>());
             singleTask.paidOnly = row["paid_only"].as<bool>();
@@ -180,7 +121,7 @@ TaskData &Task::getDailyTask() {
     bool dailyInDb = false;
     try {
         dailyInDb = tx.query_value<bool>(
-                "SELECT COUNT(*) FROM tasks WHERE refresh_time IS NOT NULL");
+            "SELECT COUNT(*) FROM tasks WHERE refresh_time IS NOT NULL");
     } catch (std::exception const &e) {
         std::cerr << '\n' << "ERROR: " << e.what() << '\n';
     }
@@ -189,7 +130,7 @@ TaskData &Task::getDailyTask() {
     if (dailyInDb) {
         try {
             refreshTimeFromDb = tx.query_value<time_t>(
-                    "SELECT refresh_time FROM tasks WHERE refresh_time IS NOT NULL");
+                "SELECT refresh_time FROM tasks WHERE refresh_time IS NOT NULL");
         } catch (std::exception const &e) {
             std::cerr << '\n' << "ERROR: " << e.what() << '\n';
         }
@@ -203,10 +144,7 @@ TaskData &Task::getDailyTask() {
         singleTask.titleSlug = jsonDailyTask["titleSlug"].get<string>();
         singleTask.title = jsonDailyTask["title"].get<string>();
         singleTask.difficulty = jsonDailyTask["difficulty"].get<string>();
-
-        const string htmlContent = jsonDailyTask["content"].get<string>();
-        htmlToPlainText(htmlContent);
-
+        singleTask.content = jsonDailyTask["content"].get<string>();
         singleTask.topicTags = jsonDailyTask["topicTags"];
         singleTask.codeSnippets = jsonDailyTask["codeSnippets"];
         singleTask.paidOnly = jsonDailyTask["paidOnly"].get<bool>();
@@ -231,7 +169,7 @@ TaskData &Task::getSingleTask(const string &titleSlug) {
     bool alreadyInDb = false;
     try {
         alreadyInDb = tx.query_value<bool>(
-                "SELECT COUNT(*) FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
+            "SELECT COUNT(*) FROM tasks WHERE title_slug = '" + singleTask.titleSlug + "'");
     } catch (std::exception const &e) {
         std::cerr << "ERROR: " << e.what() << '\n';
     }
@@ -243,10 +181,7 @@ TaskData &Task::getSingleTask(const string &titleSlug) {
         singleTask.frontendId = std::stoi(jsonSingleTask["frontendId"].get<string>());
         singleTask.title = jsonSingleTask["title"].get<string>();
         singleTask.difficulty = jsonSingleTask["difficulty"].get<string>();
-
-        const string htmlContent = jsonSingleTask["content"].get<string>();
-        htmlToPlainText(htmlContent);
-
+        singleTask.content = jsonSingleTask["content"].get<string>();
         singleTask.topicTags = jsonSingleTask["topicTags"];
         singleTask.codeSnippets = jsonSingleTask["codeSnippets"];
         singleTask.paidOnly = jsonSingleTask["paidOnly"].get<bool>();
@@ -300,4 +235,27 @@ ResultData &Task::runCode(bool isDaily, const string &langExt) {
 
 string Task::submitCode() {
     return "hello";
+}
+
+void Task::displayTask() const {
+    const string file_path = "/tmp/task.html";
+
+    std::ofstream task_file(file_path);
+    if (!task_file) {
+        std::cerr << "Error: cannot open file" << std::endl;
+        return;
+    }
+
+    task_file << HTML_WRAPPER << "<body data-title=\"" << singleTask.title << "\">"
+            << singleTask.content << "</body></html>";
+
+    if (task_file.fail()) {
+        std::cerr << "Error: failed to write to " << file_path << std::endl;
+        return;
+    }
+
+    task_file.close();
+
+    const string open_google_cmd = "nohup google-chrome --app=file://" + file_path + " " + file_path + " > /dev/null 2>&1";
+    system(open_google_cmd.c_str());
 }

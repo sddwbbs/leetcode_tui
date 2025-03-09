@@ -65,7 +65,6 @@ void App::startApp() {
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
-    noecho();
     curs_set(FALSE);
 
     getmaxyx(stdscr, totalRows, totalCols);

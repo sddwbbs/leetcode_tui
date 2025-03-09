@@ -18,18 +18,21 @@ vector<json> QuestionListRequest::getQuestionList(string &searchText) {
         requestBody["variables"]["filters"] = json::object();
     requestBody["operationName"] = "problemsetQuestionList";
 
-    auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
-                         cpr::Header{{"Content-Type", "application/json"},
-                                     {"Referer", "https://leetcode.com/problemset/?page=1&search=" + searchText},
-                                     {"Cookie", cookie.c_str()},
-                                     {"X-Csrftoken", Config::getCsrftoken().c_str()}},
-                         cpr::Body{requestBody.dump()});
+    for (int attempt = 0; attempt < MAX_RETRIES; ++attempt) {
+        auto response = cpr::Post(cpr::Url{"https://leetcode.com/graphql/"},
+                                  cpr::Header{{"Content-Type", "application/json"},
+                                      {"Referer", "https://leetcode.com/problemset/?page=1&search=" + searchText},
+                                      {"Cookie", cookie.c_str()},
+                                      {"X-Csrftoken", Config::getCsrftoken().c_str()}},
+                                  cpr::Body{requestBody.dump()});
 
-    if (response.status_code == 200) {
-        jsonResponse = json::parse(response.text);
-        result = jsonResponse["data"]["problemsetQuestionList"]["questions"];
-    } else {
-        return json::parse("");
+        if (response.status_code == 200) {
+            jsonResponse = json::parse(response.text);
+            result = jsonResponse["data"]["problemsetQuestionList"]["questions"];
+            break;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(DELAY_MS));
     }
 
     return result;
